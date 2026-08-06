@@ -1,1 +1,1982 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="羽球收帳">
+<meta name="mobile-web-app-capable" content="yes">
+<title>羽球收帳本</title>
+<style>
+  :root{
+    --bg:#F5F3EC;
+    --ink:#16140F;
+    --gold:#C9992B;
+    --gold-soft:#E8CE8A;
+    --card:#FFFFFF;
+    --line:#E7E2D5;
+    --muted:#8B8577;
+    --red:#C7472F;
+    --red-soft:#FBE6E1;
+    --green:#3E7A4C;
+    --green-soft:#E3F0E3;
+    --blue:#2E6FB0;
+    --blue-soft:#DCEAFB;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--ink);
+    color:#fff;
+    padding:28px 20px 22px;
+  }
+  .eyebrow{
+    font-size:13px;
+    color:#9C978A;
+    letter-spacing:2px;
+    margin-bottom:8px;
+  }
+  .title-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .title-row input{
+    background:transparent;
+    border:none;
+    color:#fff;
+    font-size:26px;
+    font-weight:700;
+    font-family:inherit;
+    padding:0;
+    width:auto;
+    max-width:100%;
+  }
+  .title-row input:focus{outline:none;border-bottom:1px solid var(--gold);}
+  .pencil{opacity:.7;font-size:18px;flex-shrink:0;}
+  .rule-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    row-gap:6px;
+  }
+  .rule-chip{
+    font-size:14px;
+    color:var(--gold-soft);
+    white-space:nowrap;
+  }
+  .rule-chip b{color:var(--gold);font-weight:700;}
+  .rule-chip .star{color:var(--gold);}
+  .no-rules-hint{font-size:13px;color:#8f8a7c;}
 
+  .weekday-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .weekday-row label{font-size:13px;color:#9C978A;}
+  .weekday-row select, .weekday-row input[type="date"]{
+    background:#232019;
+    color:#fff;
+    border:1px solid #3A3626;
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .weekday-row input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);}
+
+  .tabs{
+    display:flex;
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:16px 8px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--muted);
+    border-bottom:2px solid transparent;
+    cursor:pointer;
+  }
+  .tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+
+  .panel{padding:18px 16px 8px;}
+  .panel.hidden{display:none;}
+
+  .hint{
+    font-size:13.5px;
+    line-height:1.7;
+    color:#5c584c;
+    margin-bottom:14px;
+  }
+  .hint code{background:#EFEAD9;padding:1px 5px;border-radius:5px;font-size:12.5px;}
+
+  textarea{
+    width:100%;
+    min-height:180px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    font-size:15px;
+    font-family:inherit;
+    line-height:1.9;
+    resize:vertical;
+  }
+  textarea:focus{outline:none;border-color:var(--ink);}
+
+  .btn-primary{
+    display:block;
+    width:100%;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:var(--radius);
+    padding:16px;
+    font-size:16px;
+    font-weight:700;
+    font-family:inherit;
+    margin-top:14px;
+    cursor:pointer;
+  }
+  .btn-outline{
+    display:block;
+    width:100%;
+    background:transparent;
+    color:var(--red);
+    border:1px solid var(--red);
+    border-radius:var(--radius);
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    font-family:inherit;
+    margin-top:14px;
+    cursor:pointer;
+  }
+
+  .section-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-top:16px;
+  }
+  .section-title{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:12px;}
+
+  .rule-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14.5px;
+  }
+  .rule-row:last-child{border-bottom:none;}
+  .rule-row .rr-time{flex:1;color:var(--ink);}
+  .rule-row .rr-price{font-weight:700;color:var(--gold);width:70px;text-align:right;}
+  .rule-row .rr-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px;}
+
+  .add-rule{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .add-rule input{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    font-family:inherit;
+    font-size:14px;
+  }
+  .add-rule input.time{width:52px;text-align:center;}
+  .add-rule input.price{width:78px;}
+  .add-rule .sep{color:var(--muted);}
+  .add-rule button{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .wd-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+    flex-wrap:wrap;
+  }
+  .wd-row:last-child{border-bottom:none;}
+  .wd-day-badge{
+    background:#EFEAD9;
+    color:#6b6656;
+    font-size:12px;
+    font-weight:700;
+    padding:4px 8px;
+    border-radius:8px;
+    flex-shrink:0;
+  }
+  .wd-label{
+    font-size:12.5px;
+    color:var(--muted);
+    background:#F2EFE4;
+    padding:3px 8px;
+    border-radius:6px;
+    flex-shrink:0;
+  }
+  .wd-time{flex:1;min-width:70px;color:var(--ink);}
+  .wd-price{font-weight:700;color:var(--gold);white-space:nowrap;}
+  .wd-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 2px;}
+
+  .add-wd-rule{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .add-wd-rule select, .add-wd-rule input{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    font-family:inherit;
+    font-size:13.5px;
+  }
+  .add-wd-rule input.wd-time-input{width:48px;text-align:center;}
+  .add-wd-rule input.wd-label-input{width:64px;}
+  .add-wd-rule input.wd-price-input{width:72px;}
+  .add-wd-rule button{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .generic-rule-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .generic-rule-row:last-child{border-bottom:none;}
+  .generic-rule-row .grr-label{font-size:14px;color:var(--ink);}
+  .generic-rule-row .grr-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .generic-rule-row input{
+    width:80px;
+    text-align:center;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 4px;
+    font-family:inherit;
+    font-size:14px;
+  }
+
+  .mc-extra{
+    display:inline-block;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--muted);
+    cursor:pointer;
+    background:var(--card);
+    white-space:nowrap;
+  }
+  .mc-extra.on{
+    background:var(--gold-soft);
+    color:#7A5E17;
+    border-color:var(--gold);
+  }
+
+  .cal-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .cal-nav button{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 14px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .cal-nav .cal-title{font-size:16px;font-weight:700;}
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .cal-dow{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    padding-bottom:4px;
+  }
+  .cal-cell{
+    aspect-ratio:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    font-size:13.5px;
+    cursor:pointer;
+    background:var(--card);
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .cal-cell.empty{visibility:hidden;cursor:default;}
+  .cal-cell.today{border-color:var(--ink);border-width:2px;}
+  .cal-cell.selected{background:var(--ink);color:#fff;}
+  .cal-cell .dot{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--gold);
+    margin-top:3px;
+  }
+  .cal-cell.selected .dot{background:var(--gold-soft);}
+
+  .cal-preview{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-top:16px;
+  }
+  .cal-preview-title{font-size:16px;font-weight:700;margin-bottom:10px;}
+  .cal-preview-row:last-of-type{border-bottom:none;}
+  .cal-preview-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13.5px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    gap:4px 8px;
+  }
+  .cal-preview-row .cpr-name{flex:1 1 100%;overflow-wrap:anywhere;white-space:normal;font-weight:600;}
+  .cal-preview-row .cpr-meta{color:var(--muted);white-space:nowrap;}
+  .cal-preview-row .cpr-price{font-weight:700;white-space:nowrap;}
+  .cal-preview-totals{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:10px 0 4px;
+  }
+  .cal-preview-btns{display:flex;gap:8px;margin-top:12px;}
+  .cal-preview-btns button{
+    flex:1;
+    border-radius:12px;
+    padding:12px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:var(--card);
+  }
+  .cal-preview-btns button.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .stat-row{
+    display:flex;
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+  }
+  .stat{flex:1;text-align:center;padding:20px 6px;}
+  .stat + .stat{border-left:1px solid var(--line);}
+  .stat .label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .stat .value{font-size:22px;font-weight:800;}
+  .stat.paid .value{color:var(--green);}
+  .stat.unpaid .value{color:var(--red);}
+
+  .method-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:14px 16px 0;
+  }
+  .method-chip{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:20px;
+  }
+  .method-chip.cash{background:var(--green-soft);color:var(--green);}
+  .method-chip.linepay{background:var(--blue-soft);color:var(--blue);}
+  .method-chip.waived{background:var(--gold-soft);color:#7A5E17;}
+  .method-chip.unpaid{background:var(--red-soft);color:var(--red);}
+
+  .field-label{font-size:13px;color:var(--muted);margin:16px 16px 8px;}
+  .add-member{padding:0 16px;}
+  .name-row{display:flex;gap:8px;}
+  .name-row input{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    font-size:15px;
+    font-family:inherit;
+  }
+  .name-row button{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:0 18px;
+    font-size:14px;
+    font-weight:700;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .time-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:12px;
+  }
+  .time-row .tr-label{font-size:13.5px;color:var(--muted);white-space:nowrap;}
+  .time-row input{
+    width:56px;
+    text-align:center;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 4px;
+    font-family:inherit;
+    font-size:14.5px;
+  }
+  .time-row .unit{font-size:13px;color:var(--muted);}
+
+  .preset-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+  .preset-chip{
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:9px 14px;
+    font-size:13.5px;
+    background:var(--card);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .preset-chip b{color:var(--gold);}
+
+  .member-list{padding:18px 16px 4px;}
+  .member-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .member-card.cash{background:var(--green-soft);border-color:var(--green);}
+  .member-card.linepay{background:var(--green-soft);border-color:var(--green);}
+  .member-card.waived{border-color:var(--gold);}
+  .mc-top{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .mc-meta-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .mc-idx{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:#EFEAD9;
+    color:#8f8a7c;
+    font-size:12.5px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+  .mc-name{flex:1;font-size:16px;font-weight:600;overflow-wrap:anywhere;white-space:normal;}
+  .mc-price{font-size:16px;font-weight:700;white-space:nowrap;}
+  .mc-price.warn{color:var(--red);}
+  .mc-pay{
+    border:none;
+    border-radius:16px;
+    padding:7px 12px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mc-pay.unpaid{background:#EFEAD9;color:#6b6656;}
+  .mc-pay.cash{background:var(--green);color:#fff;}
+  .mc-pay.linepay{background:var(--blue);color:#fff;}
+  .mc-pay.waived{background:var(--gold-soft);color:#7A5E17;}
+  .mc-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+  .mc-level{
+    width:44px;
+    text-align:center;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 2px;
+    font-size:12.5px;
+    font-family:inherit;
+    flex-shrink:0;
+  }
+  .mc-level::placeholder{color:#B7B1A0;}
+  .mc-time{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .mc-time input{
+    width:46px;
+    text-align:center;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 2px;
+    font-size:13.5px;
+    font-family:inherit;
+  }
+  .mc-time .sep{color:var(--muted);font-size:13px;}
+  .mc-time select{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 4px;
+    font-size:13px;
+    font-family:inherit;
+    background:#fff;
+    max-width:120px;
+  }
+  .mc-flag{font-size:12px;color:var(--red);margin-top:8px;}
+
+  .summary-card{
+    background:var(--ink);
+    color:#fff;
+    border-radius:var(--radius);
+    padding:20px;
+    margin:18px 16px;
+  }
+  .summary-card .st-label{font-size:13px;color:#9C978A;margin-bottom:2px;}
+  .summary-title-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+  .summary-title-row .left{font-size:13px;color:#9C978A;}
+  .summary-title-row .right{font-size:17px;font-weight:800;}
+  .group-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .group-chip{
+    background:#2A2820;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12.5px;
+    color:#D9D4C6;
+  }
+  .group-chip b{color:var(--gold-soft);}
+  .summary-line{
+    display:flex;
+    justify-content:space-between;
+    font-size:14.5px;
+    padding:9px 0;
+    border-top:1px solid #2E2C24;
+  }
+  .summary-line.paid{color:#9BD3A7;}
+  .summary-line.unpaid{color:#E8A79A;}
+  .summary-line.linepay{color:#9FC7EE;}
+  .summary-line.waived{color:#E3CB8A;}
+
+  .hourly-card{margin:0 16px 18px;}
+
+  .export-btn{
+    display:block;
+    width:calc(100% - 32px);
+    margin:0 16px 18px;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    border-radius:var(--radius);
+    padding:16px;
+    font-size:15.5px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+  }
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,18,12,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-card{
+    background:#fff;
+    border-radius:var(--radius);
+    padding:20px;
+    max-width:440px;
+    width:100%;
+    max-height:82vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .modal-title{font-weight:700;font-size:16px;margin-bottom:10px;}
+  #exportText{
+    flex:1;
+    min-height:280px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    font-size:13px;
+    line-height:1.8;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    resize:vertical;
+    background:#FBFAF6;
+  }
+  .modal-actions{display:flex;gap:8px;margin-top:14px;}
+  .modal-actions button{
+    flex:1;
+    padding:13px 8px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  #copyBtn{background:var(--ink);color:#fff;}
+  #shareBtn{background:var(--green);color:#fff;}
+  #closeModalBtn{background:#EFEAD9;color:#6b6656;}
+  #confirmOkBtn{background:var(--red);color:#fff;}
+  #confirmCancelBtn{background:#EFEAD9;color:#6b6656;}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:30px;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:12px 20px;
+    border-radius:20px;
+    font-size:14px;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);
+    z-index:1000;
+    max-width:85vw;
+    text-align:center;
+  }
+  .toast.hidden{display:none;}
+  .hourly-row{margin-bottom:14px;}
+  .hourly-row:last-child{margin-bottom:0;}
+  .hourly-top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
+  .hourly-bar-bg{background:#EFEAD9;border-radius:6px;height:8px;overflow:hidden;}
+  .hourly-bar-fg{background:var(--ink);height:100%;border-radius:6px;}
+
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:50px 20px;
+    line-height:1.8;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">羽球收帳本</div>
+  <div class="title-row">
+    <input id="titleInput" value="場次">
+    <span class="pencil">✏️</span>
+  </div>
+  <div class="rule-chips" id="ruleChips"></div>
+  <div class="weekday-row">
+    <label>本場日期</label>
+    <input type="date" id="sessionDateInput" onchange="switchToDate(this.value)">
+    <label>星期</label>
+    <select id="weekdaySelect" onchange="updateWeekday(this.value)">
+      <option value="1">星期一</option>
+      <option value="2">星期二</option>
+      <option value="3">星期三</option>
+      <option value="4">星期四</option>
+      <option value="5">星期五</option>
+      <option value="6">星期六</option>
+      <option value="0">星期日</option>
+    </select>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="paste">📋 貼上名單</div>
+  <div class="tab" data-tab="collect">💰 收帳（<span id="tabCount">0</span>人）</div>
+  <div class="tab" data-tab="weekday">📅 星期價格表</div>
+  <div class="tab" data-tab="calendar">🗓 月曆</div>
+</div>
+
+<!-- PASTE TAB -->
+<div class="panel" id="panel-paste">
+  <div class="hint">
+    將 Line 群組的報名名單直接貼入，程式會自動比對金額：優先看「星期價格表」（依本場星期＋時段/時數），找不到才用下面這組「時段價格設定」，兩者都沒有才會標示請設定。重新貼入時已收款記錄不會消失，記事本內容也會自動保留，重新打開不會不見。<br>
+    支援格式：<code>時段(C)(・)(18~20)</code> 或 <code>時段C (18-20)</code>，也支援單一成員自帶時間，如 <code>EN(18-21)</code>；全形括號（）與全形數字也支援。<br>
+    ・同一人報名兩個「連續」時段（前一段結束時間 = 後一段開始時間，或時間重疊），會自動合併成一段連續時間，再依合併後的總時間比對價格。<br>
+    ・若同一人在兩個相連時段中，第二次報名的暱稱只是多加一個數字（如「王小均❤️」→「王小均❤️2」），也會視為同一人合併計算，不會重複收費。
+  </div>
+  <textarea id="pasteInput" placeholder="時段(C)(・)(18~20)&#10;1. 🌸GMeiMei🌸&#10;2. EN(18-21)&#10;..."></textarea>
+  <button class="btn-primary" onclick="parseAndImport()">自動解析並帶入 →</button>
+
+  <div class="section-card">
+    <div class="section-title">⏱ 時段價格設定</div>
+    <div id="ruleList"></div>
+    <div class="add-rule">
+      <input class="time" id="newRuleStart" type="number" min="0" max="23" placeholder="18">
+      <span class="sep">–</span>
+      <input class="time" id="newRuleEnd" type="number" min="0" max="23" placeholder="20">
+      <span class="sep">時 →</span>
+      <input class="price" id="newRulePrice" type="number" min="0" placeholder="$金額">
+      <button onclick="addRule()">＋新增時段</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">解析規則</div>
+    <div class="hint" style="margin-bottom:0;">
+      ・有括號時間 → 依括號內的起訖時間比對「時段價格設定」<br>
+      ・無括號 → 以上方最近一個時段標題的時間為準<br>
+      ・同時段同名兩次（時間完全相同）→ 視為兩人，不合併<br>
+      ・同名（或名字只差一個尾數字）但報名兩個「緊接相連」的時段 → 自動合併成一段連續時間，以合併後的總時間比對價格（享連續優惠），不重複計費<br>
+      ・重新貼入時已收款記錄保留，僅更新時間 / 金額<br>
+      ・「後補」等無時間標題會被忽略，後補成員照樣依上一個時段時間帶入<br>
+      ・若時間找不到對應價格，該成員金額會標示「請設定」，可在收帳頁手動輸入金額
+    </div>
+  </div>
+</div>
+
+<!-- COLLECT TAB -->
+<div class="panel hidden" id="panel-collect">
+  <div class="stat-row">
+    <div class="stat"><div class="label">應收總額</div><div class="value" id="statTotal">$0</div></div>
+    <div class="stat paid"><div class="label">已收</div><div class="value" id="statPaid">$0</div></div>
+    <div class="stat unpaid"><div class="label">未收</div><div class="value" id="statUnpaid">$0</div></div>
+  </div>
+  <div class="method-chips" id="methodChips"></div>
+
+  <div class="field-label">手動新增 / 修改</div>
+  <div class="add-member">
+    <div class="name-row">
+      <input id="newMemberName" placeholder="姓名 / 暱稱">
+      <button onclick="addManualMember()">＋ 加入</button>
+    </div>
+    <div class="time-row">
+      <span class="tr-label">在場時間</span>
+      <input id="newMemberStart" type="number" min="0" max="23" placeholder="開始">
+      <span class="unit">—</span>
+      <input id="newMemberEnd" type="number" min="0" max="23" placeholder="結束">
+      <span class="unit">時</span>
+    </div>
+    <div class="preset-chips" id="presetChips"></div>
+  </div>
+
+  <div class="member-list" id="memberList"></div>
+
+  <div class="summary-card" id="summaryCard"></div>
+
+  <button class="export-btn" onclick="openExportModal()">📤 一鍵輸出當日繳費清單</button>
+
+  <div class="section-card hourly-card" id="hourlyCard"></div>
+
+  <button class="btn-outline" onclick="clearSession()">🗑 清空本場，開始新場次</button>
+</div>
+
+<div class="modal-overlay hidden" id="exportModal">
+  <div class="modal-card">
+    <div class="modal-title">📋 今日繳費清單</div>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button id="copyBtn" onclick="copyExportText()">📋 複製</button>
+      <button id="shareBtn" onclick="shareExportText()">📤 分享</button>
+      <button id="closeModalBtn" onclick="closeExportModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal-card">
+    <div class="modal-title" id="confirmModalTitle">確定要繼續嗎？</div>
+    <div class="modal-actions">
+      <button id="confirmOkBtn" onclick="confirmModalOk()">確定</button>
+      <button id="confirmCancelBtn" onclick="closeConfirmModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<!-- WEEKDAY PRICE SHEET TAB -->
+<div class="panel hidden" id="panel-weekday">
+  <div class="hint">
+    每個月的開團時段跟價格常常會調整，這個分頁跟上面「時段價格設定」是分開、獨立的價目表，依「星期幾＋時段（或時數）」設定金額，計算時會優先套用這裡的規則。改天改價格都直接在這裡改，不影響其他星期。
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📆 每週時段價格（依星期＋起訖時間）</div>
+    <div id="wdTimeList"></div>
+    <div class="add-wd-rule">
+      <select id="wdTimeDay">
+        <option value="1">一</option><option value="2">二</option><option value="3">三</option>
+        <option value="4">四</option><option value="5">五</option><option value="6">六</option>
+        <option value="0">日</option>
+      </select>
+      <input class="wd-label-input" id="wdTimeLabel" placeholder="等級/代號">
+      <input class="wd-time-input" id="wdTimeStart" type="number" min="0" max="23" placeholder="18">
+      <span class="sep">–</span>
+      <input class="wd-time-input" id="wdTimeEnd" type="number" min="0" max="23" placeholder="20">
+      <input class="wd-price-input" id="wdTimePrice" type="number" min="0" placeholder="$金額">
+      <button onclick="addWeekdayTimeRule()">＋新增</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">⏳ 每週時數價格（同一天只報名「部分時數」時使用，例如整段開放 3 小時、但只來 2 小時）</div>
+    <div id="wdDurationList"></div>
+    <div class="add-wd-rule">
+      <select id="wdDurDay">
+        <option value="1">一</option><option value="2">二</option><option value="3">三</option>
+        <option value="4">四</option><option value="5">五</option><option value="6">六</option>
+        <option value="0">日</option>
+      </select>
+      <input class="wd-time-input" id="wdDurHours" type="number" min="1" max="12" placeholder="時數">
+      <span class="sep">小時 →</span>
+      <input class="wd-price-input" id="wdDurPrice" type="number" min="0" placeholder="$金額">
+      <button onclick="addWeekdayDurationRule()">＋新增</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">⚙️ 通用規則</div>
+    <div class="generic-rule-row">
+      <div>
+        <div class="grr-label">單小時體驗價</div>
+        <div class="grr-sub">只報名 1 小時、且沒有其他對應規則時使用</div>
+      </div>
+      <input type="number" min="0" id="singleHourPriceInput" onchange="updateGenericRule('singleHourPrice', this.value)">
+    </div>
+    <div class="generic-rule-row">
+      <div>
+        <div class="grr-label">加報一小時加價</div>
+        <div class="grr-sub">成員卡片上可勾選「多加一小時」，會加上這個金額</div>
+      </div>
+      <input type="number" min="0" id="extraHourAddOnInput" onchange="updateGenericRule('extraHourAddOn', this.value)">
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">比對優先順序</div>
+    <div class="hint" style="margin-bottom:0;">
+      1. 本場星期 ＋ 起訖時間完全相符 → 用「每週時段價格」<br>
+      2. 找不到 1，改用本場星期 ＋ 總時數相符 → 用「每週時數價格」<br>
+      3. 還是找不到 → 改比對「時段價格設定」（不分星期）<br>
+      4. 都沒有、但總時數剛好 1 小時 → 用「單小時體驗價」<br>
+      5. 都沒有對應規則 → 標示「請設定」，需手動輸入金額
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR TAB -->
+<div class="panel hidden" id="panel-calendar">
+  <div class="hint">
+    有紀錄的日期會顯示一個小圓點，點日期可以預覽當天的球員名單、時段、級數與金額，並可以複製成文字清單或直接跳去編輯。
+  </div>
+  <div class="section-card">
+    <div class="cal-nav">
+      <button onclick="changeCalendarMonth(-1)">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button onclick="changeCalendarMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div id="calPreview"></div>
+</div>
+
+<script>
+let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{} };
+let saveTimer = null;
+
+
+// This build runs on a normal website, so it saves data with the browser's
+// built-in localStorage instead of the Claude-artifact-only storage API.
+const storage = {
+  async get(key){
+    const v = localStorage.getItem(key);
+    return v !== null ? { key, value: v } : null;
+  },
+  async set(key, value){
+    localStorage.setItem(key, value);
+    return { key, value };
+  }
+};
+
+const GMEIMEI_NAME = "🌸GMeiMei🌸";
+function defaultPayMethodFor(name){
+  return name === GMEIMEI_NAME ? 'waived' : null;
+}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function isoToday(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function isoWeekday(dateStr){
+  return new Date(dateStr+'T00:00:00').getDay();
+}
+
+function defaultTitleForDate(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return `${y}/${m}/${d} 場次`;
+}
+
+// Mirror the current working session into the date-keyed archive so the
+// calendar tab can look it up later.
+function syncCurrentIntoArchive(){
+  if(!state.sessionDate) return;
+  state.sessions[state.sessionDate] = {
+    title: state.title,
+    weekday: state.weekday,
+    members: state.members,
+    pasteText: state.pasteText
+  };
+}
+
+// Save the current session into the archive, then load (or start fresh)
+// the session for the newly picked date.
+function switchToDate(newDate){
+  if(!newDate) return;
+  syncCurrentIntoArchive();
+  state.sessionDate = newDate;
+  state.weekday = isoWeekday(newDate);
+  const existing = state.sessions[newDate];
+  if(existing){
+    state.title = existing.title || defaultTitleForDate(newDate);
+    state.members = existing.members || [];
+    state.pasteText = existing.pasteText || '';
+  } else {
+    state.title = defaultTitleForDate(newDate);
+    state.members = [];
+    state.pasteText = '';
+  }
+  document.getElementById('pasteInput').value = state.pasteText || '';
+  scheduleSave();
+  render();
+}
+
+async function loadState(){
+  try{
+    const r = await storage.get('badminton-state');
+    if(r && r.value){ state = JSON.parse(r.value); }
+  }catch(e){ /* no existing data yet */ }
+  if(!state.rules || state.rules.length===0){
+    state.rules = [
+      {id:uid(), start:18, end:20, price:190},
+      {id:uid(), start:18, end:21, price:280},
+      {id:uid(), start:19, end:22, price:290},
+      {id:uid(), start:18, end:22, price:350},
+    ];
+  }
+  // 內建時段：20–22 固定 $200，若不存在則自動補上
+  if(!state.rules.some(r=>Number(r.start)===20 && Number(r.end)===22)){
+    state.rules.push({id:uid(), start:20, end:22, price:200, builtin:true});
+  }
+  // 每週時段/時數價格表、通用規則、本場星期：舊資料相容補值
+  if(state.weekday===undefined || state.weekday===null){ state.weekday = new Date().getDay(); }
+  if(!state.genericRules){ state.genericRules = { singleHourPrice:100, extraHourAddOn:90 }; }
+  if(state.genericRules.singleHourPrice===undefined){ state.genericRules.singleHourPrice = 100; }
+  if(state.genericRules.extraHourAddOn===undefined){ state.genericRules.extraHourAddOn = 90; }
+  if(!state.weekdayTimeRules || state.weekdayTimeRules.length===0){
+    // 範例起始值，取自使用者提供的 8 月開團表，每月可自行調整
+    state.weekdayTimeRules = [
+      {id:uid(), day:1, label:'C',    start:18, end:20, price:180},
+      {id:uid(), day:1, label:'D1',   start:20, end:22, price:190},
+      {id:uid(), day:1, label:'D2',   start:19, end:22, price:270},
+      {id:uid(), day:1, label:'C+D1', start:18, end:22, price:330},
+      {id:uid(), day:3, label:'C',    start:18, end:20, price:190},
+      {id:uid(), day:3, label:'D',    start:20, end:22, price:200},
+      {id:uid(), day:3, label:'C+D',  start:18, end:22, price:350},
+      {id:uid(), day:5, label:'夜間暢打', start:20, end:23, price:270},
+      {id:uid(), day:6, label:'午後暢打', start:13, end:16, price:270},
+      {id:uid(), day:0, label:'A',    start:8,  end:10, price:190},
+      {id:uid(), day:0, label:'B',    start:9,  end:12, price:270},
+      {id:uid(), day:0, label:'C',    start:11, end:13, price:190},
+    ];
+  }
+  if(!state.weekdayDurationRules || state.weekdayDurationRules.length===0){
+    state.weekdayDurationRules = [
+      {id:uid(), day:5, duration:2, price:190},
+      {id:uid(), day:6, duration:2, price:190},
+    ];
+  }
+  // 舊資料相容：member.extraHour 預設 false，member.level 預設空字串
+  (state.members||[]).forEach(m=>{
+    if(m.extraHour===undefined){ m.extraHour = false; }
+    if(m.level===undefined){ m.level = ''; }
+  });
+  // 舊資料相容：paid(boolean) → payMethod('cash'|'linepay'|null)
+  state.members = (state.members||[]).map(m=>{
+    if(m.payMethod===undefined){
+      m.payMethod = m.paid ? 'cash' : null;
+    }
+    delete m.paid;
+    if(m.name===GMEIMEI_NAME && !m.payMethod){ m.payMethod = 'waived'; }
+    return m;
+  });
+  // 舊資料相容：本場日期／月曆存檔
+  if(!state.sessionDate){ state.sessionDate = isoToday(); }
+  if(!state.sessions){ state.sessions = {}; }
+  if(!state.playerLevels){ state.playerLevels = {}; }
+  // 用現有名單資料回填固定球友的級數登記表（若尚未有登記）
+  (state.members||[]).forEach(m=>{
+    if(m.level && !state.playerLevels[m.name]){ state.playerLevels[m.name] = m.level; }
+  });
+  syncCurrentIntoArchive();
+  document.getElementById('pasteInput').value = state.pasteText || '';
+  scheduleSave();
+  render();
+}
+
+function scheduleSave(){
+  syncCurrentIntoArchive();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{ await storage.set('badminton-state', JSON.stringify(state)); }
+    catch(e){ console.error('save failed', e); }
+  }, 300);
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const which = t.dataset.tab;
+    document.getElementById('panel-paste').classList.toggle('hidden', which!=='paste');
+    document.getElementById('panel-collect').classList.toggle('hidden', which!=='collect');
+    document.getElementById('panel-weekday').classList.toggle('hidden', which!=='weekday');
+    document.getElementById('panel-calendar').classList.toggle('hidden', which!=='calendar');
+    if(which==='calendar'){ renderCalendarTab(); }
+  });
+});
+
+document.getElementById('titleInput').addEventListener('input', e=>{
+  state.title = e.target.value;
+  scheduleSave();
+});
+
+document.getElementById('pasteInput').addEventListener('input', e=>{
+  state.pasteText = e.target.value;
+  scheduleSave();
+});
+
+// ---------- Rule matching ----------
+function findRule(start, end){
+  return state.rules.find(r => Number(r.start)===Number(start) && Number(r.end)===Number(end));
+}
+
+function findWeekdayTimeRule(day, start, end){
+  return state.weekdayTimeRules.find(r => Number(r.day)===Number(day) && Number(r.start)===Number(start) && Number(r.end)===Number(end));
+}
+
+function findWeekdayDurationRule(day, duration){
+  return state.weekdayDurationRules.find(r => Number(r.day)===Number(day) && Number(r.duration)===Number(duration));
+}
+
+// Priority: 本場星期＋時段 → 本場星期＋時數 → 時段價格設定（不分星期） → 單小時體驗價 → 找不到
+function computeBasePrice(start, end){
+  if(start===null || end===null || !Number.isFinite(start) || !Number.isFinite(end)) return null;
+  const day = state.weekday;
+  const duration = end - start;
+  const wdTime = findWeekdayTimeRule(day, start, end);
+  if(wdTime) return wdTime.price;
+  const wdDur = findWeekdayDurationRule(day, duration);
+  if(wdDur) return wdDur.price;
+  const oldRule = findRule(start, end);
+  if(oldRule) return oldRule.price;
+  if(duration===1 && Number.isFinite(Number(state.genericRules.singleHourPrice))){
+    return Number(state.genericRules.singleHourPrice);
+  }
+  return null;
+}
+
+function finalPriceFor(m){
+  if(m.manualPrice) return m.price;
+  const base = computeBasePrice(m.start, m.end);
+  if(base===null) return null;
+  return base + (m.extraHour ? (Number(state.genericRules.extraHourAddOn)||0) : 0);
+}
+
+// Recompute every non-manual member's price after any rule/generic-setting change
+function refreshAutoPrices(){
+  state.members.forEach(m=>{
+    if(!m.manualPrice){
+      m.price = finalPriceFor(m);
+    }
+  });
+}
+
+// ---------- Rendering ----------
+function render(){
+  document.getElementById('titleInput').value = state.title;
+  document.getElementById('weekdaySelect').value = String(state.weekday);
+  document.getElementById('sessionDateInput').value = state.sessionDate;
+
+  // header chips
+  const rc = document.getElementById('ruleChips');
+  if(state.rules.length===0){
+    rc.innerHTML = '<span class="no-rules-hint">尚未設定時段價格，請至「貼上名單」頁新增</span>';
+  } else {
+    const sorted = [...state.rules].sort((a,b)=>a.start-b.start || a.end-b.end);
+    const maxPrice = Math.max(...sorted.map(r=>r.price));
+    rc.innerHTML = sorted.map(r=>{
+      const star = r.price===maxPrice ? ' <span class="star">★</span>' : '';
+      return `<span class="rule-chip">${r.start}–${r.end} <b>$${r.price}</b>${star}</span>`;
+    }).join('');
+  }
+
+  renderRuleList();
+  renderPresetChips();
+  renderWeekdayPanel();
+  renderMembers();
+  renderSummary();
+  renderHourly();
+  document.getElementById('tabCount').textContent = state.members.length;
+}
+
+const WEEKDAY_LABELS = ['日','一','二','三','四','五','六'];
+
+function renderWeekdayPanel(){
+  document.getElementById('singleHourPriceInput').value = state.genericRules.singleHourPrice;
+  document.getElementById('extraHourAddOnInput').value = state.genericRules.extraHourAddOn;
+
+  const timeEl = document.getElementById('wdTimeList');
+  if(state.weekdayTimeRules.length===0){
+    timeEl.innerHTML = '<div class="hint" style="margin:0;">尚無資料，請於下方新增。</div>';
+  } else {
+    const sorted = [...state.weekdayTimeRules].sort((a,b)=> a.day-b.day || a.start-b.start || a.end-b.end);
+    timeEl.innerHTML = sorted.map(r=>`
+      <div class="wd-row">
+        <span class="wd-day-badge">星期${WEEKDAY_LABELS[r.day]}</span>
+        ${r.label ? `<span class="wd-label">${escapeHtml(r.label)}</span>` : ''}
+        <span class="wd-time">${r.start}:00–${r.end}:00</span>
+        <span class="wd-price">$${r.price}</span>
+        <button class="wd-del" onclick="deleteWeekdayTimeRule('${r.id}')">✕</button>
+      </div>
+    `).join('');
+  }
+
+  const durEl = document.getElementById('wdDurationList');
+  if(state.weekdayDurationRules.length===0){
+    durEl.innerHTML = '<div class="hint" style="margin:0;">尚無資料，請於下方新增。</div>';
+  } else {
+    const sortedD = [...state.weekdayDurationRules].sort((a,b)=> a.day-b.day || a.duration-b.duration);
+    durEl.innerHTML = sortedD.map(r=>`
+      <div class="wd-row">
+        <span class="wd-day-badge">星期${WEEKDAY_LABELS[r.day]}</span>
+        <span class="wd-time">共 ${r.duration} 小時</span>
+        <span class="wd-price">$${r.price}</span>
+        <button class="wd-del" onclick="deleteWeekdayDurationRule('${r.id}')">✕</button>
+      </div>
+    `).join('');
+  }
+}
+
+function renderRuleList(){
+  const el = document.getElementById('ruleList');
+  if(state.rules.length===0){
+    el.innerHTML = '<div class="hint" style="margin:0;">尚無時段價格，請於下方新增。</div>';
+    return;
+  }
+  const sorted = [...state.rules].sort((a,b)=>a.start-b.start || a.end-b.end);
+  el.innerHTML = sorted.map(r=>`
+    <div class="rule-row">
+      <div class="rr-time">${r.start}:00 – ${r.end}:00</div>
+      <div class="rr-price">$${r.price}</div>
+      <button class="rr-del" onclick="deleteRule('${r.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderPresetChips(){
+  const el = document.getElementById('presetChips');
+  const sorted = [...state.rules].sort((a,b)=>a.start-b.start || a.end-b.end);
+  el.innerHTML = sorted.map(r=>`
+    <div class="preset-chip" onclick="fillPreset(${r.start},${r.end})">${r.start}–${r.end} <b>$${r.price}</b></div>
+  `).join('');
+}
+
+function fillPreset(start,end){
+  document.getElementById('newMemberStart').value = start;
+  document.getElementById('newMemberEnd').value = end;
+}
+
+function renderMembers(){
+  const el = document.getElementById('memberList');
+  if(state.members.length===0){
+    el.innerHTML = '<div class="empty-state">尚未有成員<br>請先到「貼上名單」頁面匯入，或在上方手動新增</div>';
+    return;
+  }
+  el.innerHTML = orderedMembers(state.members).map((m,i)=>{
+    const base = computeBasePrice(m.start, m.end);
+    const priceKnown = m.price !== null && m.price !== undefined && m.price !== '';
+    const priceDisplay = priceKnown ? `$${m.price}` : '請設定';
+    const warnClass = priceKnown ? '' : 'warn';
+    const flag = (base===null && !m.manualPrice) ? '<div class="mc-flag">⚠ 找不到對應價格，請手動輸入金額</div>' : '';
+    const method = m.payMethod || null;
+    const cardClass = method==='cash' ? 'cash' : (method==='linepay' ? 'linepay' : (method==='waived' ? 'waived' : ''));
+    const payClass = method==='cash' ? 'cash' : (method==='linepay' ? 'linepay' : (method==='waived' ? 'waived' : 'unpaid'));
+    const payLabel = method==='cash' ? '現金' : (method==='linepay' ? 'Line Pay' : (method==='waived' ? '不用收' : '未收 →'));
+    const addOn = Number(state.genericRules.extraHourAddOn)||0;
+    return `
+    <div class="member-card ${cardClass}">
+      <div class="mc-top">
+        <div class="mc-idx">${i+1}</div>
+        <div class="mc-name">${escapeHtml(m.name)}</div>
+      </div>
+      <div class="mc-meta-row">
+        <div class="mc-price ${warnClass}">${priceDisplay}</div>
+        <input class="mc-level" placeholder="級數" value="${escapeHtml(m.level||'')}" onchange="updateMemberLevel('${m.id}',this.value)">
+        <button class="mc-pay ${payClass}" onclick="cyclePay('${m.id}')">${payLabel}</button>
+        <button class="mc-del" onclick="deleteMember('${m.id}')">✕</button>
+      </div>
+      <div class="mc-time">
+        <input type="number" min="0" max="23" value="${m.start}" onchange="updateMemberTime('${m.id}','start',this.value)">
+        <span class="sep">—</span>
+        <input type="number" min="0" max="23" value="${m.end}" onchange="updateMemberTime('${m.id}','end',this.value)">
+        <span class="sep">時</span>
+        ${(m.manualPrice || base===null) ? `<input type="number" min="0" placeholder="手動金額" style="width:80px" value="${priceKnown?m.price:''}" onchange="updateMemberPrice('${m.id}',this.value)">` : ''}
+        ${!m.manualPrice && base!==null ? `<span class="mc-extra ${m.extraHour?'on':''}" onclick="toggleExtraHour('${m.id}')">${m.extraHour?'✓ ':''}加報一小時（+$${addOn}）</span>` : ''}
+      </div>
+      ${flag}
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function orderedMembers(members){
+  const gmei = members.filter(m=>m.name===GMEIMEI_NAME);
+  const rest = members.filter(m=>m.name!==GMEIMEI_NAME)
+    .slice()
+    .sort((a,b)=> (a.start-b.start) || (a.end-b.end) || String(a.name).localeCompare(String(b.name)));
+  return [...gmei, ...rest];
+}
+
+function buildSummaryHTML(members, label){
+  if(members.length===0) return '';
+  const total = members.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const cashMembers = members.filter(m=>m.payMethod==='cash');
+  const linepayMembers = members.filter(m=>m.payMethod==='linepay');
+  const waivedMembers = members.filter(m=>m.payMethod==='waived');
+  const unpaidMembers = members.filter(m=>!m.payMethod);
+  const cashTotal = cashMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const linepayTotal = linepayMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const waivedTotal = waivedMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const paid = cashTotal + linepayTotal;
+  const stillOwed = total - paid - waivedTotal;
+
+  const groups = {};
+  members.forEach(m=>{
+    const p = Number(m.price)||0;
+    groups[p] = (groups[p]||0)+1;
+  });
+  const groupChips = Object.keys(groups).sort((a,b)=>a-b).map(p=>`<span class="group-chip">$${p} <b>× ${groups[p]} 人</b></span>`).join('');
+
+  return `
+    <div class="summary-title-row">
+      <div class="left">${label}・共 ${members.length} 人</div>
+      <div class="right">應收 $${total}</div>
+    </div>
+    <div class="group-chips">${groupChips}</div>
+    <div class="summary-line paid"><span>💵 現金（${cashMembers.length} 人）</span><span>$${cashTotal}</span></div>
+    <div class="summary-line linepay"><span>📱 Line Pay（${linepayMembers.length} 人）</span><span>$${linepayTotal}</span></div>
+    <div class="summary-line waived"><span>🙅 不用收（${waivedMembers.length} 人）</span><span>-$${waivedTotal}</span></div>
+    <div class="summary-line paid"><span>✓ 已收合計</span><span>$${paid}</span></div>
+    <div class="summary-line unpaid"><span>⏳ 待收（${unpaidMembers.length} 人）</span><span>$${stillOwed}</span></div>
+  `;
+}
+
+function buildHourlyHTML(members){
+  if(members.length===0) return '';
+  let min=24, max=0;
+  members.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
+  if(min>=max) return '';
+  const counts = [];
+  for(let h=min; h<max; h++){
+    const c = members.filter(m=>m.start<=h && m.end>h).length;
+    counts.push({h,c});
+  }
+  const maxC = Math.max(...counts.map(x=>x.c), 1);
+  return `<div class="section-title">每小時在場人數</div>` + counts.map(x=>`
+    <div class="hourly-row">
+      <div class="hourly-top"><span>${x.h}:00 – ${x.h+1}:00</span><span><b>${x.c}</b> 人</span></div>
+      <div class="hourly-bar-bg"><div class="hourly-bar-fg" style="width:${(x.c/maxC*100).toFixed(0)}%"></div></div>
+    </div>
+  `).join('');
+}
+
+function renderSummary(){
+  const el = document.getElementById('summaryCard');
+  const total = state.members.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const cashMembers = state.members.filter(m=>m.payMethod==='cash');
+  const linepayMembers = state.members.filter(m=>m.payMethod==='linepay');
+  const waivedMembers = state.members.filter(m=>m.payMethod==='waived');
+  const unpaidMembers = state.members.filter(m=>!m.payMethod);
+  const cashTotal = cashMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const linepayTotal = linepayMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const waivedTotal = waivedMembers.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const paid = cashTotal + linepayTotal;
+  const stillOwed = total - paid - waivedTotal;
+
+  document.getElementById('statTotal').textContent = `$${total}`;
+  document.getElementById('statPaid').textContent = `$${paid}`;
+  document.getElementById('statUnpaid').textContent = `$${stillOwed}`;
+
+  const chipEl = document.getElementById('methodChips');
+  let chips = '';
+  if(cashMembers.length>0) chips += `<span class="method-chip cash">現金 ${cashMembers.length} 人</span>`;
+  if(linepayMembers.length>0) chips += `<span class="method-chip linepay">Line Pay ${linepayMembers.length} 人</span>`;
+  if(waivedMembers.length>0) chips += `<span class="method-chip waived">不用收 ${waivedMembers.length} 人</span>`;
+  if(unpaidMembers.length>0) chips += `<span class="method-chip unpaid">未付 ${unpaidMembers.length} 人</span>`;
+  chipEl.innerHTML = chips;
+
+  el.innerHTML = buildSummaryHTML(state.members, '本場小結');
+}
+
+function renderHourly(){
+  document.getElementById('hourlyCard').innerHTML = buildHourlyHTML(state.members);
+}
+
+// ---------- Rule CRUD ----------
+function addRule(){
+  const start = Number(document.getElementById('newRuleStart').value);
+  const end = Number(document.getElementById('newRuleEnd').value);
+  const price = Number(document.getElementById('newRulePrice').value);
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end<=start || !Number.isFinite(price) || price<=0){
+    showToast('請完整輸入開始時間、結束時間（結束需大於開始）與金額');
+    return;
+  }
+  if(findRule(start,end)){
+    showToast('此時段已經有價格設定囉');
+    return;
+  }
+  state.rules.push({id:uid(), start, end, price});
+  document.getElementById('newRuleStart').value='';
+  document.getElementById('newRuleEnd').value='';
+  document.getElementById('newRulePrice').value='';
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function deleteRule(id){
+  state.rules = state.rules.filter(r=>r.id!==id);
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+// ---------- Weekday price sheet CRUD ----------
+function updateWeekday(value){
+  state.weekday = Number(value);
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function addWeekdayTimeRule(){
+  const day = Number(document.getElementById('wdTimeDay').value);
+  const label = document.getElementById('wdTimeLabel').value.trim();
+  const start = Number(document.getElementById('wdTimeStart').value);
+  const end = Number(document.getElementById('wdTimeEnd').value);
+  const price = Number(document.getElementById('wdTimePrice').value);
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end<=start || !Number.isFinite(price) || price<=0){
+    showToast('請完整輸入開始時間、結束時間（結束需大於開始）與金額');
+    return;
+  }
+  if(findWeekdayTimeRule(day,start,end)){
+    showToast('這個星期＋時段已經有價格設定囉');
+    return;
+  }
+  state.weekdayTimeRules.push({id:uid(), day, label, start, end, price});
+  document.getElementById('wdTimeLabel').value='';
+  document.getElementById('wdTimeStart').value='';
+  document.getElementById('wdTimeEnd').value='';
+  document.getElementById('wdTimePrice').value='';
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function deleteWeekdayTimeRule(id){
+  state.weekdayTimeRules = state.weekdayTimeRules.filter(r=>r.id!==id);
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function addWeekdayDurationRule(){
+  const day = Number(document.getElementById('wdDurDay').value);
+  const duration = Number(document.getElementById('wdDurHours').value);
+  const price = Number(document.getElementById('wdDurPrice').value);
+  if(!Number.isFinite(duration) || duration<=0 || !Number.isFinite(price) || price<=0){
+    showToast('請完整輸入時數與金額');
+    return;
+  }
+  if(findWeekdayDurationRule(day,duration)){
+    showToast('這個星期＋時數已經有價格設定囉');
+    return;
+  }
+  state.weekdayDurationRules.push({id:uid(), day, duration, price});
+  document.getElementById('wdDurHours').value='';
+  document.getElementById('wdDurPrice').value='';
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function deleteWeekdayDurationRule(id){
+  state.weekdayDurationRules = state.weekdayDurationRules.filter(r=>r.id!==id);
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function updateGenericRule(field, value){
+  const v = Number(value);
+  state.genericRules[field] = Number.isFinite(v) && v>=0 ? v : 0;
+  refreshAutoPrices();
+  scheduleSave();
+  render();
+}
+
+function toggleExtraHour(id){
+  const m = state.members.find(m=>m.id===id);
+  if(!m || m.manualPrice) return;
+  m.extraHour = !m.extraHour;
+  m.price = finalPriceFor(m);
+  scheduleSave();
+  render();
+}
+
+// ---------- Member CRUD ----------
+function addManualMember(){
+  const name = document.getElementById('newMemberName').value.trim();
+  const start = Number(document.getElementById('newMemberStart').value);
+  const end = Number(document.getElementById('newMemberEnd').value);
+  if(!name){ showToast('請輸入姓名 / 暱稱'); return; }
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end<=start){ showToast('請輸入正確的在場時間'); return; }
+  const base = computeBasePrice(start,end);
+  state.members.push({
+    id:uid(), name, start, end,
+    price: base,
+    manualPrice: base===null,
+    extraHour: false,
+    level: state.playerLevels[name] || '',
+    payMethod: defaultPayMethodFor(name)
+  });
+  document.getElementById('newMemberName').value='';
+  document.getElementById('newMemberStart').value='';
+  document.getElementById('newMemberEnd').value='';
+  scheduleSave();
+  render();
+}
+
+function deleteMember(id){
+  state.members = state.members.filter(m=>m.id!==id);
+  scheduleSave();
+  render();
+}
+
+function cyclePay(id){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  const order = [null, 'cash', 'linepay', 'waived'];
+  const idx = order.indexOf(m.payMethod || null);
+  m.payMethod = order[(idx+1)%order.length];
+  scheduleSave();
+  render();
+}
+
+function updateMemberTime(id, field, value){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  m[field] = Number(value);
+  const base = computeBasePrice(m.start, m.end);
+  if(base!==null){ m.manualPrice = false; m.price = finalPriceFor(m); }
+  else { m.manualPrice = true; }
+  scheduleSave();
+  render();
+}
+
+function updateMemberLevel(id, value){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  m.level = value.trim();
+  if(m.level){ state.playerLevels[m.name] = m.level; }
+  scheduleSave();
+}
+
+function updateMemberPrice(id, value){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  const v = Number(value);
+  m.price = Number.isFinite(v) && v>=0 ? v : null;
+  m.manualPrice = true;
+  scheduleSave();
+  render();
+}
+
+// ---------- Custom confirm modal & toast ----------
+// iOS "Add to Home Screen" standalone mode does not reliably support native
+// confirm()/alert()/prompt() dialogs, so we use our own in-app equivalents.
+let pendingConfirmCallback = null;
+
+function showConfirmModal(message, onConfirm){
+  document.getElementById('confirmModalTitle').textContent = message;
+  pendingConfirmCallback = onConfirm;
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function closeConfirmModal(){
+  document.getElementById('confirmModal').classList.add('hidden');
+  pendingConfirmCallback = null;
+}
+
+function confirmModalOk(){
+  const cb = pendingConfirmCallback;
+  closeConfirmModal();
+  if(cb) cb();
+}
+
+let toastTimer = null;
+function showToast(message){
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.classList.add('hidden'); }, 2200);
+}
+
+function showTextFallback(text){
+  document.getElementById('exportText').value = text;
+  document.getElementById('exportModal').classList.remove('hidden');
+}
+
+function clearSession(){
+  if(state.members.length===0 && !document.getElementById('pasteInput').value.trim()){ return; }
+  showConfirmModal('確定要清空本場所有成員、收款記錄與記事本內容，開始新場次嗎？此動作無法復原。', ()=>{
+    state.members = [];
+    state.pasteText = '';
+    state.title = defaultTitleForDate(state.sessionDate);
+    document.getElementById('pasteInput').value = '';
+    scheduleSave();
+    render();
+    showToast('已清空本場，開始新場次');
+  });
+}
+
+// ---------- Calendar tab ----------
+let calendarViewYear = null;
+let calendarViewMonth = null; // 0-indexed
+let calendarSelectedDate = null;
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+function sessionDataFor(dateStr){
+  // Always read the live in-memory session for whichever date is currently
+  // active, so the preview never shows stale pre-debounce data.
+  if(dateStr === state.sessionDate){
+    return { title: state.title, weekday: state.weekday, members: state.members, pasteText: state.pasteText };
+  }
+  return state.sessions[dateStr] || null;
+}
+
+function renderCalendarTab(){
+  if(calendarViewYear===null){
+    const [y,m] = state.sessionDate.split('-').map(Number);
+    calendarViewYear = y;
+    calendarViewMonth = m-1;
+    calendarSelectedDate = state.sessionDate;
+  }
+  document.getElementById('calTitle').textContent = `${calendarViewYear}年${calendarViewMonth+1}月`;
+
+  const firstDow = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+  const daysInMonth = new Date(calendarViewYear, calendarViewMonth+1, 0).getDate();
+  const todayStr = isoToday();
+
+  let cells = ['日','一','二','三','四','五','六'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++){ cells += '<div class="cal-cell empty"></div>'; }
+  for(let day=1; day<=daysInMonth; day++){
+    const dateStr = `${calendarViewYear}-${pad2(calendarViewMonth+1)}-${pad2(day)}`;
+    const data = sessionDataFor(dateStr);
+    const hasData = data && data.members && data.members.length>0;
+    const cls = ['cal-cell'];
+    if(dateStr===todayStr) cls.push('today');
+    if(dateStr===calendarSelectedDate) cls.push('selected');
+    cells += `<div class="${cls.join(' ')}" onclick="selectCalendarDay('${dateStr}')">${day}${hasData?'<div class="dot"></div>':''}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+
+  renderCalendarPreview();
+}
+
+function changeCalendarMonth(delta){
+  calendarViewMonth += delta;
+  if(calendarViewMonth<0){ calendarViewMonth=11; calendarViewYear--; }
+  if(calendarViewMonth>11){ calendarViewMonth=0; calendarViewYear++; }
+  renderCalendarTab();
+}
+
+function selectCalendarDay(dateStr){
+  calendarSelectedDate = dateStr;
+  renderCalendarTab();
+}
+
+function renderCalendarPreview(){
+  const el = document.getElementById('calPreview');
+  const dateStr = calendarSelectedDate;
+  if(!dateStr){ el.innerHTML=''; return; }
+  const data = sessionDataFor(dateStr);
+  const wd = WEEKDAY_LABELS[isoWeekday(dateStr)];
+  const dateLabel = `${dateStr.replace(/-/g,'/')}（${wd}）`;
+
+  if(!data || !data.members || data.members.length===0){
+    el.innerHTML = `
+      <div class="cal-preview">
+        <div class="cal-preview-title">${dateLabel}</div>
+        <div class="hint" style="margin:0;">這天還沒有名單資料。</div>
+        <div class="cal-preview-btns">
+          <button class="primary" onclick="switchToDate('${dateStr}'); document.querySelector('.tab[data-tab=\\'collect\\']').click();">前往這天新增名單</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const total = data.members.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const paid = data.members.filter(m=>m.payMethod==='cash'||m.payMethod==='linepay').reduce((s,m)=>s+(Number(m.price)||0),0);
+  const waived = data.members.filter(m=>m.payMethod==='waived').reduce((s,m)=>s+(Number(m.price)||0),0);
+  const owed = total - paid - waived;
+
+  const rows = orderedMembers(data.members).map((m,i)=>{
+    const payLabel = m.payMethod==='cash'?'現金':(m.payMethod==='linepay'?'Line Pay':(m.payMethod==='waived'?'不用收':'未收'));
+    const priceLabel = (m.price!==null&&m.price!==undefined&&m.price!=='') ? `$${m.price}` : '請設定';
+    return `<div class="cal-preview-row">
+      <span class="cpr-name">${i+1}. ${escapeHtml(m.name)}</span>
+      <span class="cpr-meta">${m.start}-${m.end}${m.level?('・'+escapeHtml(m.level)):''}</span>
+      <span class="cpr-price">${priceLabel}</span>
+      <span class="cpr-meta">${payLabel}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="cal-preview">
+      <div class="cal-preview-title">${dateLabel}・${escapeHtml(data.title||'')}</div>
+      ${rows}
+      <div class="cal-preview-totals">共 ${data.members.length} 人・應收 $${total}・已收 $${paid}・未收 $${owed}</div>
+      <div class="cal-preview-btns">
+        <button onclick="copySessionText('${dateStr}')">📋 複製繳費清單文字</button>
+        <button class="primary" onclick="switchToDate('${dateStr}'); document.querySelector('.tab[data-tab=\\'collect\\']').click();">前往編輯</button>
+      </div>
+    </div>
+    <div class="summary-card">${buildSummaryHTML(data.members, '本日小結')}</div>
+    <div class="section-card hourly-card">${buildHourlyHTML(data.members)}</div>
+  `;
+}
+
+function formatSessionText(dateStr){
+  const data = sessionDataFor(dateStr);
+  if(!data || !data.members || data.members.length===0) return '';
+  const wd = WEEKDAY_LABELS[isoWeekday(dateStr)];
+  const total = data.members.reduce((s,m)=>s+(Number(m.price)||0),0);
+  const paid = data.members.filter(m=>m.payMethod==='cash'||m.payMethod==='linepay').reduce((s,m)=>s+(Number(m.price)||0),0);
+  const waived = data.members.filter(m=>m.payMethod==='waived').reduce((s,m)=>s+(Number(m.price)||0),0);
+  const owed = total - paid - waived;
+
+  let lines = [];
+  lines.push(`🏸 羽球收帳 - ${dateStr.replace(/-/g,'/')}（${wd}）`);
+  lines.push(`────────────────`);
+  orderedMembers(data.members).forEach((m,i)=>{
+    const payLabel = m.payMethod==='cash'?'現金':(m.payMethod==='linepay'?'Line Pay':(m.payMethod==='waived'?'不用收':'未收'));
+    const priceLabel = (m.price!==null&&m.price!==undefined&&m.price!=='') ? `$${m.price}` : '請設定';
+    lines.push(`${i+1}. ${m.name} | ${m.start}-${m.end}${m.level?(' | '+m.level):''} | ${priceLabel} | ${payLabel}`);
+  });
+  lines.push(`────────────────`);
+  lines.push(`共${data.members.length}人・應收 $${total}・已收 $${paid}・未收 $${owed}`);
+  return lines.join('\n');
+}
+
+function copySessionText(dateStr){
+  const text = formatSessionText(dateStr);
+  if(!text) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('已複製到剪貼簿，可以直接貼到 Line 傳送！');
+    }).catch(()=>{
+      showTextFallback(text);
+    });
+  } else {
+    showTextFallback(text);
+  }
+}
+
+// ---------- Export modal (today's payment list, from the 收帳 tab) ----------
+function openExportModal(){
+  const text = formatSessionText(state.sessionDate);
+  document.getElementById('exportText').value = text || '目前這天還沒有成員資料可以輸出。';
+  document.getElementById('exportModal').classList.remove('hidden');
+}
+
+function closeExportModal(){
+  document.getElementById('exportModal').classList.add('hidden');
+}
+
+function copyExportText(){
+  const text = document.getElementById('exportText').value;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('已複製到剪貼簿，可以直接貼到 Line 傳送！');
+    }).catch(()=>{
+      showTextFallback(text);
+    });
+  } else {
+    showTextFallback(text);
+  }
+}
+
+function shareExportText(){
+  const text = document.getElementById('exportText').value;
+  if(navigator.share){
+    navigator.share({ text }).catch(()=>{ /* user cancelled share, ignore */ });
+  } else {
+    copyExportText();
+  }
+}
+
+// ---------- Normalize full-width punctuation (（）－～ etc.) to ASCII ----------
+function toHalfWidth(str){
+  return str
+    .replace(/[\uFF01-\uFF5E]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/\u3000/g, ' ');
+}
+
+// ---------- Merge consecutive/overlapping slots for the same name ----------
+function mergeMemberIntervals(parsed){
+  // parsed: array of {name, start, end, block} in original order
+  const withIdx = parsed.map((p,idx)=>({...p, idx}));
+  const byName = {};
+  withIdx.forEach(p=>{
+    (byName[p.name] = byName[p.name] || []).push(p);
+  });
+
+  const result = [];
+  Object.keys(byName).forEach(name=>{
+    const entries = byName[name];
+    const noTime = entries.filter(e=>e.start===null || e.end===null);
+    const withTime = entries.filter(e=>e.start!==null && e.end!==null);
+    noTime.forEach(e=>result.push(e));
+
+    if(withTime.length===0) return;
+    if(withTime.length===1){ result.push(withTime[0]); return; }
+
+    // sort by start time, then merge sequentially
+    const sorted = [...withTime].sort((a,b)=>a.start-b.start || a.idx-b.idx);
+    const merged = [];
+    let cur = {...sorted[0]};
+    for(let i=1;i<sorted.length;i++){
+      const nxt = sorted[i];
+      const sameExactSlot = nxt.start===cur.start && nxt.end===cur.end;
+      const sameBlock = nxt.block===cur.block;
+      if(sameExactSlot && sameBlock){
+        // identical name, identical time, listed twice within the SAME header
+        // block — genuinely two different people sharing a name. Keep separate.
+        merged.push(cur);
+        cur = {...nxt};
+      } else if(nxt.start <= cur.end){
+        // adjacent / overlapping (including an exact-duplicate re-listed under
+        // a DIFFERENT header block) — this is the same person. Merge.
+        cur.start = Math.min(cur.start, nxt.start);
+        cur.end = Math.max(cur.end, nxt.end);
+        cur.idx = Math.min(cur.idx, nxt.idx);
+      } else {
+        merged.push(cur);
+        cur = {...nxt};
+      }
+    }
+    merged.push(cur);
+    merged.forEach(m=>result.push(m));
+  });
+
+  return result.sort((a,b)=>a.idx-b.idx);
+}
+
+// ---------- Second pass: merge "name" + "name2" style consecutive re-signups ----------
+// Some sign-up sheets re-list the same person under a second consecutive slot
+// with a trailing digit appended to their name (e.g. "王小均❤️" then "王小均❤️2").
+// If the base name (name with a trailing bare digit stripped) matches and the
+// two slots are strictly back-to-back (one ends exactly when the other starts),
+// treat them as ONE person. Identical-time entries (e.g. "Q.Z 1" / "Q.Z 2" both
+// at 22–23) are left untouched since they are genuinely different people.
+function baseName(name){
+  return name.replace(/\s*\d+$/, '').trim();
+}
+
+function mergeAdjacentSameBase(entries){
+  const withTime = entries.filter(e=>e.start!==null && e.end!==null);
+  const noTime = entries.filter(e=>e.start===null || e.end===null);
+
+  const groups = {};
+  withTime.forEach(e=>{
+    const b = baseName(e.name) || e.name;
+    (groups[b] = groups[b] || []).push(e);
+  });
+
+  const output = [...noTime];
+  Object.values(groups).forEach(group=>{
+    if(group.length===1){ output.push(group[0]); return; }
+    const sorted = [...group].sort((a,b)=>a.start-b.start);
+    const merged = [];
+    let cur = {...sorted[0]};
+    for(let i=1;i<sorted.length;i++){
+      const nxt = sorted[i];
+      if(nxt.start === cur.end){ // strictly back-to-back only, never same-time
+        cur.end = nxt.end;
+        cur.idx = Math.min(cur.idx, nxt.idx);
+        if(/\d$/.test(cur.name) && !/\d$/.test(nxt.name)){ cur.name = nxt.name; }
+      } else {
+        merged.push(cur);
+        cur = {...nxt};
+      }
+    }
+    merged.push(cur);
+    merged.forEach(m=>output.push(m));
+  });
+
+  return output.sort((a,b)=>a.idx-b.idx);
+}
+
+// ---------- Paste & parse ----------
+function parseAndImport(){
+  const raw = toHalfWidth(document.getElementById('pasteInput').value);
+  if(!raw.trim()){ showToast('請先貼上名單'); return; }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0 && l!=='...');
+
+  let curStart=null, curEnd=null, blockIndex=0;
+  const parsed = []; // {name, start, end, block}
+
+  const timeRe = /(\d{1,2})\s*[-~–]\s*(\d{1,2})/g;
+  const memberLineRe = /^\d+[\.\、]\s*(.*)$/;
+
+  for(const line of lines){
+    const memberMatch = line.match(memberLineRe);
+    if(memberMatch){
+      let name = memberMatch[1].trim();
+      // check inline time override within the member's own text
+      const inlineMatches = [...name.matchAll(timeRe)];
+      let s = curStart, e = curEnd;
+      if(inlineMatches.length>0){
+        const last = inlineMatches[inlineMatches.length-1];
+        s = Number(last[1]); e = Number(last[2]);
+        name = name.replace(last[0], '').replace(/[()（）]/g,'').trim();
+      }
+      if(name.length===0) continue;
+      if(s===null || e===null) { parsed.push({name, start:null, end:null, block:blockIndex}); continue; }
+      parsed.push({name, start:s, end:e, block:blockIndex});
+    } else {
+      // header line marks the start of a new block; try to extract its time
+      blockIndex++;
+      const matches = [...line.matchAll(timeRe)];
+      if(matches.length>0){
+        const last = matches[matches.length-1];
+        curStart = Number(last[1]);
+        curEnd = Number(last[2]);
+      }
+      // if no time found (e.g. "後補"), keep previous block's time untouched
+    }
+  }
+
+  if(parsed.length===0){ showToast('沒有解析到任何成員，請確認格式'); return; }
+
+  const merged = mergeAdjacentSameBase(mergeMemberIntervals(parsed));
+
+  // merge with existing members: match by name, keep paid status; allow duplicate names as separate entries
+  const existingByName = {};
+  state.members.forEach(m=>{
+    existingByName[m.name] = existingByName[m.name] || [];
+    existingByName[m.name].push(m);
+  });
+
+  const newMembers = merged.map(p=>{
+    const pool = existingByName[p.name];
+    const prev = pool && pool.length ? pool.shift() : null;
+    const base = (p.start!==null && p.end!==null) ? computeBasePrice(p.start,p.end) : null;
+    const manualPrice = prev ? (prev.manualPrice && base===null) : base===null;
+    const extraHour = prev ? !!prev.extraHour : false;
+    let level = prev ? (prev.level || '') : (state.playerLevels[p.name] || '');
+    const member = {
+      id: prev ? prev.id : uid(),
+      name: p.name,
+      start: p.start,
+      end: p.end,
+      price: manualPrice ? (prev ? prev.price : null) : base,
+      manualPrice,
+      extraHour,
+      level,
+      payMethod: prev ? (prev.payMethod || null) : defaultPayMethodFor(p.name)
+    };
+    if(!manualPrice){ member.price = finalPriceFor(member); }
+    return member;
+  });
+
+  state.members = newMembers;
+  scheduleSave();
+  render();
+  // switch to collect tab
+  document.querySelector('.tab[data-tab="collect"]').click();
+}
+
+loadState();
+</script>
+</body>
+</html>
