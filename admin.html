@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="暢打後台">
+<title>暢打報名・後台管理</title>
+<style>
+  :root{
+    --bg:#F5F3EC;
+    --ink:#16140F;
+    --gold:#C9992B;
+    --gold-soft:#E8CE8A;
+    --card:#FFFFFF;
+    --line:#E7E2D5;
+    --muted:#8B8577;
+    --red:#C7472F;
+    --red-soft:#FBE6E1;
+    --green:#3E7A4C;
+    --green-soft:#E3F0E3;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+    padding-bottom:60px;
+  }
+  header{background:var(--ink);color:#fff;padding:28px 20px 22px;}
+  .eyebrow{font-size:13px;color:#9C978A;letter-spacing:2px;margin-bottom:6px;}
+  .h-title{font-size:24px;font-weight:800;}
+
+  .panel{padding:18px 16px 8px;}
+  .section-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .section-title{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:12px;}
+
+  .field-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .field-row > div{flex:1;min-width:90px;}
+  .field-row label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:4px;}
+  .field-row input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .btn{
+    display:block;width:100%;border:none;border-radius:12px;padding:13px;
+    font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+
+  .session-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .session-card.closed{opacity:.6;}
+  .sc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .sc-date{font-size:17px;font-weight:800;}
+  .sc-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .sc-badge{
+    font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:8px;white-space:nowrap;
+  }
+  .sc-badge.open{background:var(--green-soft);color:var(--green);}
+  .sc-badge.closed{background:#EFEAD9;color:#6b6656;}
+  .sc-count{font-size:14px;margin-top:10px;}
+  .sc-count b{color:var(--gold);}
+  .sc-list{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;}
+  .sc-list-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;}
+  .sc-list-row .name{font-weight:600;}
+  .sc-list-row .phone{color:var(--muted);}
+  .sc-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .sc-btns button{
+    flex:1;min-width:100px;border:1px solid var(--line);border-radius:10px;
+    padding:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--card);
+  }
+  .sc-btns button.danger{color:var(--red);border-color:var(--red-soft);}
+  .sc-btns button.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .empty-state{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;line-height:1.8;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999;}
+  .modal-overlay.hidden{display:none;}
+  .modal-card{background:var(--card);border-radius:var(--radius);padding:22px;width:100%;max-width:380px;}
+  .modal-title{font-weight:800;font-size:16px;margin-bottom:12px;}
+  .modal-card input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;font-family:inherit;}
+  .modal-card textarea{
+    width:100%;min-height:220px;border:1px solid var(--line);border-radius:10px;
+    padding:12px;font-size:13px;font-family:monospace;line-height:1.7;
+  }
+  .modal-actions{display:flex;gap:8px;margin-top:16px;}
+  .modal-actions button{flex:1;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;}
+  .modal-actions .primary{background:var(--ink);color:#fff;}
+  .modal-actions .cancel{background:#EFEAD9;color:#6b6656;}
+  .modal-actions .danger{background:var(--red);color:#fff;}
+
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:20px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:1000;max-width:85vw;text-align:center;}
+  .toast.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="gateModal">
+  <div class="modal-card">
+    <div class="modal-title">🔒 後台通行碼</div>
+    <input id="gatePasscode" type="password" placeholder="請輸入通行碼">
+    <div class="modal-actions">
+      <button class="primary" onclick="checkGate()">進入</button>
+    </div>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+  <header>
+    <div class="eyebrow">GMeiMei 暢打團</div>
+    <div class="h-title">🗂 報名後台</div>
+  </header>
+
+  <div class="panel">
+    <div class="section-card">
+      <div class="section-title">➕ 開新場次</div>
+      <div class="field-row">
+        <div><label>日期</label><input type="date" id="newDate"></div>
+        <div><label>人數上限</label><input type="number" id="newCapacity" placeholder="16"></div>
+      </div>
+      <div class="field-row">
+        <div><label>開始時間</label><input type="number" id="newStart" min="0" max="23" placeholder="18"></div>
+        <div><label>結束時間</label><input type="number" id="newEnd" min="0" max="23" placeholder="20"></div>
+      </div>
+      <div class="field-row">
+        <div><label>備註（會顯示給球友看）</label><input id="newNote" placeholder="例如：YT 文中館"></div>
+      </div>
+      <button class="btn btn-primary" onclick="createSession()">開放這個場次報名</button>
+    </div>
+
+    <div class="section-title" style="padding:0 4px;">所有場次</div>
+    <div id="sessionList"><div class="empty-state">載入中...</div></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="exportModal">
+  <div class="modal-card">
+    <div class="modal-title">📋 貼到收帳本用的格式</div>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button class="primary" onclick="copyExportText()">複製</button>
+      <button class="cancel" onclick="closeExportModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal-card">
+    <div class="modal-title" id="confirmModalTitle"></div>
+    <div class="modal-actions">
+      <button class="danger" id="confirmOkBtn" onclick="confirmModalOk()">確定</button>
+      <button class="cancel" onclick="closeConfirmModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCDxk83eAhd-Y5MszbDaeez0ZCReNN8qF8",
+  authDomain: "gmmei-df82a.firebaseapp.com",
+  projectId: "gmmei-df82a",
+  storageBucket: "gmmei-df82a.firebasestorage.app",
+  messagingSenderId: "845892216171",
+  appId: "1:845892216171:web:c1fcd9c511ecc95d96582e",
+  measurementId: "G-7ZFNRS69PY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const WEEKDAY_LABELS = ['日','一','二','三','四','五','六'];
+
+// ---------- Simple passcode gate ----------
+// NOTE: this only deters casual snooping — it is not real security.
+// Firestore write rules should also restrict who can create/edit sessions.
+const ADMIN_PASSCODE = 'gmm0517';
+
+window.checkGate = function(){
+  const v = document.getElementById('gatePasscode').value;
+  if(v === ADMIN_PASSCODE){
+    sessionStorage.setItem('gmm-admin-ok', '1');
+    document.getElementById('gateModal').classList.add('hidden');
+    document.getElementById('appRoot').style.display = 'block';
+    loadSessions();
+  } else {
+    toastMsg('通行碼不對喔');
+  }
+};
+
+if(sessionStorage.getItem('gmm-admin-ok') === '1'){
+  document.getElementById('gateModal').classList.add('hidden');
+  document.getElementById('appRoot').style.display = 'block';
+  loadSessions();
+}
+
+function toastMsg(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>el.classList.add('hidden'), 2200);
+}
+
+function isoToday(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Create session ----------
+window.createSession = async function(){
+  const date = document.getElementById('newDate').value;
+  const capacity = Number(document.getElementById('newCapacity').value);
+  const start = document.getElementById('newStart').value;
+  const end = document.getElementById('newEnd').value;
+  const note = document.getElementById('newNote').value.trim();
+  if(!date){ toastMsg('請選擇日期'); return; }
+  if(!Number.isFinite(capacity) || capacity<=0){ toastMsg('請輸入正確的人數上限'); return; }
+
+  const timeLabel = (start && end) ? `${start}-${end}時` : '';
+  try{
+    await setDoc(doc(db, 'sessions', date), {
+      date, capacity, note, timeLabel,
+      startHour: start ? Number(start) : null,
+      endHour: end ? Number(end) : null,
+      open: true,
+      signupCount: 0,
+      createdAt: Date.now()
+    });
+    toastMsg('場次已開放報名！');
+    document.getElementById('newCapacity').value = '';
+    document.getElementById('newNote').value = '';
+  }catch(e){
+    toastMsg('建立失敗：' + (e.message||''));
+  }
+};
+
+// ---------- Sessions list ----------
+let unsub = null;
+function loadSessions(){
+  if(unsub) unsub();
+  const q = query(collection(db, 'sessions'), orderBy('date', 'desc'));
+  unsub = onSnapshot(q, async (snap)=>{
+    const sessions = [];
+    snap.forEach(d=>sessions.push({id:d.id, ...d.data()}));
+    await renderSessions(sessions);
+  }, (err)=>{
+    document.getElementById('sessionList').innerHTML =
+      `<div class="empty-state">讀取失敗：${err.message||''}</div>`;
+  });
+}
+
+async function renderSessions(sessions){
+  const el = document.getElementById('sessionList');
+  if(sessions.length===0){
+    el.innerHTML = '<div class="empty-state">還沒有任何場次，先在上面開一個吧！</div>';
+    return;
+  }
+  const cards = [];
+  for(const s of sessions){
+    const wd = WEEKDAY_LABELS[new Date(s.date+'T00:00:00').getDay()];
+    const signupsSnap = await getDocs(collection(db, 'sessions', s.id, 'signups'));
+    const signups = [];
+    signupsSnap.forEach(d=>signups.push({id:d.id, ...d.data()}));
+    signups.sort((a,b)=> (a.createdAt?.seconds||a.createdAt||0) - (b.createdAt?.seconds||b.createdAt||0));
+
+    const listHtml = signups.length>0 ? `
+      <div class="sc-list">
+        ${signups.map((p,i)=>`
+          <div class="sc-list-row">
+            <span class="name">${i+1}. ${escapeHtml(p.name)}</span>
+            <span class="phone">後三碼 ${escapeHtml(p.phoneLast3||'')}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '<div class="sc-list"><div class="empty-state" style="padding:10px;">還沒有人報名</div></div>';
+
+    cards.push(`
+      <div class="session-card ${s.open?'':'closed'}">
+        <div class="sc-top">
+          <div>
+            <div class="sc-date">${s.date.replace(/-/g,'/')}（${wd}）${s.timeLabel?('・'+s.timeLabel):''}</div>
+            <div class="sc-sub">${s.note?escapeHtml(s.note):''}</div>
+          </div>
+          <span class="sc-badge ${s.open?'open':'closed'}">${s.open?'報名中':'已關閉'}</span>
+        </div>
+        <div class="sc-count">已報名 <b>${s.signupCount||0}</b> / ${s.capacity} 人</div>
+        ${listHtml}
+        <div class="sc-btns">
+          <button class="primary" onclick="exportSession('${s.id}')">📋 匯出到收帳本</button>
+          <button onclick="toggleOpen('${s.id}', ${!s.open})">${s.open?'關閉報名':'重新開放'}</button>
+          <button class="danger" onclick="deleteSession('${s.id}')">刪除此場</button>
+        </div>
+      </div>
+    `);
+  }
+  el.innerHTML = cards.join('');
+}
+
+window.toggleOpen = async function(sessionId, openValue){
+  try{
+    await updateDoc(doc(db, 'sessions', sessionId), { open: openValue });
+    toastMsg(openValue ? '已重新開放報名' : '已關閉報名');
+  }catch(e){ toastMsg('操作失敗'); }
+};
+
+window.deleteSession = function(sessionId){
+  showConfirmModal(`確定要刪除 ${sessionId} 這個場次嗎？名單資料會一併刪除，無法復原。`, async ()=>{
+    try{
+      const signupsSnap = await getDocs(collection(db, 'sessions', sessionId, 'signups'));
+      for(const d of signupsSnap.docs){
+        await deleteDoc(doc(db, 'sessions', sessionId, 'signups', d.id));
+      }
+      await deleteDoc(doc(db, 'sessions', sessionId));
+      toastMsg('已刪除');
+    }catch(e){ toastMsg('刪除失敗'); }
+  });
+};
+
+window.exportSession = async function(sessionId){
+  const signupsSnap = await getDocs(collection(db, 'sessions', sessionId, 'signups'));
+  const signups = [];
+  signupsSnap.forEach(d=>signups.push(d.data()));
+  signups.sort((a,b)=> (a.createdAt?.seconds||a.createdAt||0) - (b.createdAt?.seconds||b.createdAt||0));
+
+  const sessionSnap = await getDocs(query(collection(db, 'sessions')));
+  let sData = null;
+  sessionSnap.forEach(d=>{ if(d.id===sessionId) sData = d.data(); });
+
+  const timeRange = (sData && sData.startHour!==null && sData.startHour!==undefined && sData.endHour!==null)
+    ? `(${sData.startHour}-${sData.endHour})` : '';
+
+  let lines = [`時段 ${timeRange}`];
+  signups.forEach((p,i)=>{ lines.push(`${i+1}. ${p.name}`); });
+  if(signups.length===0){ lines.push('（目前還沒有人報名）'); }
+
+  document.getElementById('exportText').value = lines.join('\n');
+  document.getElementById('exportModal').classList.remove('hidden');
+};
+
+window.closeExportModal = function(){
+  document.getElementById('exportModal').classList.add('hidden');
+};
+
+window.copyExportText = function(){
+  const text = document.getElementById('exportText').value;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toastMsg('已複製，可以貼到收帳本的「貼上名單」')).catch(()=>{});
+  }
+};
+
+// ---------- Custom confirm modal ----------
+let pendingConfirmCallback = null;
+window.showConfirmModal = function(message, onConfirm){
+  document.getElementById('confirmModalTitle').textContent = message;
+  pendingConfirmCallback = onConfirm;
+  document.getElementById('confirmModal').classList.remove('hidden');
+};
+window.closeConfirmModal = function(){
+  document.getElementById('confirmModal').classList.add('hidden');
+  pendingConfirmCallback = null;
+};
+window.confirmModalOk = function(){
+  const cb = pendingConfirmCallback;
+  closeConfirmModal();
+  if(cb) cb();
+};
+
+document.getElementById('newDate').value = isoToday();
+</script>
+</body>
+</html>

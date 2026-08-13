@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="暢打報名">
+<title>GMeiMei 暢打報名</title>
+<style>
+  :root{
+    --bg:#F5F3EC;
+    --ink:#16140F;
+    --gold:#C9992B;
+    --gold-soft:#E8CE8A;
+    --card:#FFFFFF;
+    --line:#E7E2D5;
+    --muted:#8B8577;
+    --red:#C7472F;
+    --red-soft:#FBE6E1;
+    --green:#3E7A4C;
+    --green-soft:#E3F0E3;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--ink);
+    color:#fff;
+    padding:28px 20px 22px;
+  }
+  .eyebrow{font-size:13px;color:#9C978A;letter-spacing:2px;margin-bottom:6px;}
+  .h-title{font-size:24px;font-weight:800;}
+  .h-sub{font-size:13px;color:#D9D4C6;margin-top:6px;}
+
+  .panel{padding:18px 16px 8px;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .card-date{font-size:18px;font-weight:800;}
+  .card-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+  .card-note{font-size:13px;color:var(--muted);margin-top:8px;}
+  .cap-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .cap-text{font-size:14px;color:var(--ink);}
+  .cap-text b{color:var(--gold);}
+  .cap-bar-bg{background:#EFEAD9;border-radius:6px;height:8px;overflow:hidden;margin-top:8px;}
+  .cap-bar-fg{background:var(--gold);height:100%;}
+  .cap-bar-fg.full{background:var(--red);}
+
+  .btn{
+    display:block;
+    width:100%;
+    border:none;
+    border-radius:12px;
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    font-family:inherit;
+    margin-top:14px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:disabled{background:#C9C4B4;color:#fff;cursor:default;}
+  .btn-joined{background:var(--green-soft);color:var(--green);}
+  .btn-cancel{background:var(--red-soft);color:var(--red);}
+
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:60px 20px;
+    line-height:1.8;
+  }
+
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    z-index:999;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:22px;
+    width:100%;
+    max-width:360px;
+  }
+  .modal-title{font-weight:800;font-size:17px;margin-bottom:14px;}
+  .modal-card label{font-size:13px;color:var(--muted);display:block;margin-top:12px;margin-bottom:6px;}
+  .modal-card input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+    font-size:15px;
+    font-family:inherit;
+  }
+  .modal-actions{display:flex;gap:8px;margin-top:18px;}
+  .modal-actions button{
+    flex:1;
+    border:none;
+    border-radius:10px;
+    padding:12px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  #loginOkBtn{background:var(--ink);color:#fff;}
+  #loginCancelBtn{background:#EFEAD9;color:#6b6656;}
+
+  .who-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 16px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .who-bar button{
+    background:none;border:none;color:var(--muted);
+    text-decoration:underline;font-size:13px;font-family:inherit;
+  }
+
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 20px;border-radius:20px;
+    font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:1000;
+    max-width:85vw;text-align:center;
+  }
+  .toast.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">GMeiMei 舒壓暢打團</div>
+  <div class="h-title">🏸 暢打報名</div>
+  <div class="h-sub">選一個場次直接報名，額滿就會自動關閉</div>
+</header>
+
+<div class="who-bar" id="whoBar" style="display:none; padding:14px 16px 0;">
+  <span id="whoText"></span>
+  <button onclick="logoutPlayer()">切換身分</button>
+</div>
+
+<div class="panel" id="sessionList">
+  <div class="empty-state">載入中...</div>
+</div>
+
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal-card">
+    <div class="modal-title">先告訴我你是誰 👋</div>
+    <label>暱稱</label>
+    <input id="loginName" placeholder="例如：呂文凱">
+    <label>手機後三碼</label>
+    <input id="loginPhone" placeholder="例如：123" maxlength="3" inputmode="numeric">
+    <div class="modal-actions">
+      <button id="loginOkBtn" onclick="savePlayerLogin()">確定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, doc, getDocs, onSnapshot,
+  runTransaction, deleteDoc, query, where, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCDxk83eAhd-Y5MszbDaeez0ZCReNN8qF8",
+  authDomain: "gmmei-df82a.firebaseapp.com",
+  projectId: "gmmei-df82a",
+  storageBucket: "gmmei-df82a.firebasestorage.app",
+  messagingSenderId: "845892216171",
+  appId: "1:845892216171:web:c1fcd9c511ecc95d96582e",
+  measurementId: "G-7ZFNRS69PY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const WEEKDAY_LABELS = ['日','一','二','三','四','五','六'];
+
+function toastMsg(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>el.classList.add('hidden'), 2200);
+}
+
+// ---------- Lightweight player "login" (stored on this device) ----------
+function getPlayer(){
+  try{ return JSON.parse(localStorage.getItem('gmm-player') || 'null'); }
+  catch(e){ return null; }
+}
+function playerDocId(p){
+  return `${p.name}_${p.phone}`.replace(/[\/\s]/g,'_');
+}
+
+window.savePlayerLogin = function(){
+  const name = document.getElementById('loginName').value.trim();
+  const phone = document.getElementById('loginPhone').value.trim();
+  if(!name){ toastMsg('請輸入暱稱'); return; }
+  if(!/^\d{3}$/.test(phone)){ toastMsg('手機後三碼請輸入 3 碼數字'); return; }
+  localStorage.setItem('gmm-player', JSON.stringify({name, phone}));
+  document.getElementById('loginModal').classList.add('hidden');
+  renderWhoBar();
+  loadSessions();
+};
+
+window.logoutPlayer = function(){
+  localStorage.removeItem('gmm-player');
+  renderWhoBar();
+  document.getElementById('loginModal').classList.remove('hidden');
+};
+
+function renderWhoBar(){
+  const p = getPlayer();
+  const bar = document.getElementById('whoBar');
+  if(p){
+    bar.style.display = 'flex';
+    document.getElementById('whoText').textContent = `👋 ${p.name}（後三碼 ${p.phone}）`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function ensureLogin(){
+  const p = getPlayer();
+  if(!p){
+    document.getElementById('loginModal').classList.remove('hidden');
+    return false;
+  }
+  return true;
+}
+
+// ---------- Sessions list (live) ----------
+let unsub = null;
+function loadSessions(){
+  if(unsub) unsub();
+  const todayStr = isoToday();
+  const q = query(
+    collection(db, 'sessions'),
+    where('open', '==', true),
+    orderBy('date', 'asc')
+  );
+  unsub = onSnapshot(q, (snap)=>{
+    const sessions = [];
+    snap.forEach(d=>sessions.push({id:d.id, ...d.data()}));
+    const upcoming = sessions.filter(s=>s.date >= todayStr);
+    renderSessions(upcoming);
+  }, (err)=>{
+    document.getElementById('sessionList').innerHTML =
+      `<div class="empty-state">讀取失敗，請確認網路連線或稍後再試。<br><span style="font-size:12px;">${err.message||''}</span></div>`;
+  });
+}
+
+function isoToday(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function renderSessions(sessions){
+  const el = document.getElementById('sessionList');
+  if(sessions.length===0){
+    el.innerHTML = '<div class="empty-state">目前沒有開放中的場次<br>請等待團主開團 🏸</div>';
+    return;
+  }
+  const player = getPlayer();
+  const cards = [];
+  for(const s of sessions){
+    const wd = WEEKDAY_LABELS[new Date(s.date+'T00:00:00').getDay()];
+    const count = s.signupCount || 0;
+    const cap = s.capacity || 0;
+    const full = count >= cap;
+    const pct = cap>0 ? Math.min(100, Math.round(count/cap*100)) : 0;
+
+    let joined = false;
+    if(player){
+      try{
+        const d = await getDocs(query(collection(db, 'sessions', s.id, 'signups'), where('__name__','==', playerDocId(player))));
+        joined = !d.empty;
+      }catch(e){ /* ignore */ }
+    }
+
+    let btnHtml;
+    if(joined){
+      btnHtml = `<button class="btn btn-cancel" onclick="cancelSignup('${s.id}')">✕ 取消我的報名</button>`;
+    } else if(full){
+      btnHtml = `<button class="btn btn-primary" disabled>已額滿</button>`;
+    } else {
+      btnHtml = `<button class="btn btn-primary" onclick="doSignup('${s.id}')">＋ 我要報名</button>`;
+    }
+    if(joined){
+      btnHtml = `<div class="btn btn-joined" style="text-align:center;">✓ 已報名</div>` + btnHtml;
+    }
+
+    cards.push(`
+      <div class="card">
+        <div class="card-date">${s.date.replace(/-/g,'/')}（${wd}）${s.timeLabel?('・'+s.timeLabel):''}</div>
+        ${s.note ? `<div class="card-note">${escapeHtml(s.note)}</div>` : ''}
+        <div class="cap-row">
+          <div class="cap-text">已報名 <b>${count}</b> / ${cap} 人</div>
+        </div>
+        <div class="cap-bar-bg"><div class="cap-bar-fg ${full?'full':''}" style="width:${pct}%"></div></div>
+        ${btnHtml}
+      </div>
+    `);
+  }
+  el.innerHTML = cards.join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.doSignup = async function(sessionId){
+  if(!ensureLogin()) return;
+  const player = getPlayer();
+  const sessionRef = doc(db, 'sessions', sessionId);
+  const signupRef = doc(db, 'sessions', sessionId, 'signups', playerDocId(player));
+  try{
+    await runTransaction(db, async (tx)=>{
+      const sessionSnap = await tx.get(sessionRef);
+      if(!sessionSnap.exists()) throw new Error('這個場次不存在了');
+      const data = sessionSnap.data();
+      if(!data.open) throw new Error('這個場次已經關閉報名');
+      const count = data.signupCount || 0;
+      if(count >= data.capacity) throw new Error('已額滿');
+      const existing = await tx.get(signupRef);
+      if(existing.exists()) throw new Error('你已經報名過這個場次了');
+      tx.set(signupRef, {
+        name: player.name,
+        phoneLast3: player.phone,
+        createdAt: serverTimestamp()
+      });
+      tx.update(sessionRef, { signupCount: count + 1 });
+    });
+    toastMsg('報名成功！🏸');
+  }catch(e){
+    toastMsg(e.message || '報名失敗，請再試一次');
+  }
+};
+
+window.cancelSignup = async function(sessionId){
+  if(!ensureLogin()) return;
+  const player = getPlayer();
+  const sessionRef = doc(db, 'sessions', sessionId);
+  const signupRef = doc(db, 'sessions', sessionId, 'signups', playerDocId(player));
+  try{
+    await runTransaction(db, async (tx)=>{
+      const sessionSnap = await tx.get(sessionRef);
+      if(!sessionSnap.exists()) return;
+      const data = sessionSnap.data();
+      const existing = await tx.get(signupRef);
+      if(!existing.exists()) return;
+      tx.delete(signupRef);
+      tx.update(sessionRef, { signupCount: Math.max(0, (data.signupCount||1) - 1) });
+    });
+    toastMsg('已取消報名');
+  }catch(e){
+    toastMsg('取消失敗，請再試一次');
+  }
+};
+
+// ---------- Init ----------
+renderWhoBar();
+if(!ensureLogin()){
+  // still show sessions list read-only while waiting for login
+}
+loadSessions();
+</script>
+</body>
+</html>
