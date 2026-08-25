@@ -743,6 +743,7 @@
   <div class="tab" data-tab="collect">💰 收帳（<span id="tabCount">0</span>人）</div>
   <div class="tab" data-tab="weekday">📅 星期價格表</div>
   <div class="tab" data-tab="calendar">🗓 月曆</div>
+  <div class="tab" data-tab="event">🎉 特殊活動</div>
 </div>
 
 <!-- PASTE TAB -->
@@ -929,8 +930,64 @@
   <div id="calPreview"></div>
 </div>
 
+<!-- SPECIAL EVENT TAB -->
+<div class="panel hidden" id="panel-event">
+  <div class="hint">
+    這裡跟平常的每週固定收費是分開的獨立系統，適合像中秋晚會、聖誕派對這種「時段 + 方案」組合計價的特殊活動。
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🎉 活動資訊</div>
+    <div class="field-row">
+      <div><label class="tr-label">活動名稱</label><input id="eventTitleInput" placeholder="例如：中秋變裝羽球晚會" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('title',this.value)"></div>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+      <div><label class="tr-label">活動日期</label><input type="date" id="eventDateInput" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('date',this.value)"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">💰 方案價目表</div>
+    <div id="eventPlanList"></div>
+    <div class="add-rule">
+      <input id="newPlanCode" class="wd-time-input" placeholder="代碼" style="width:52px;">
+      <input id="newPlanLabel" placeholder="方案內容" style="width:120px;">
+      <input id="newPlan3h" type="number" min="0" placeholder="3H價" style="width:64px;">
+      <input id="newPlan4h" type="number" min="0" placeholder="4H價" style="width:64px;">
+      <button onclick="addEventPlan()">＋新增方案</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">⏱ 時段代碼表</div>
+    <div class="section-sub">先設定每個時段代碼對應的實際時間，貼名單時系統會用這個時間比對方案價格</div>
+    <div id="eventSlotList"></div>
+    <div class="add-rule">
+      <input id="newSlotCode" class="wd-time-input" placeholder="代碼" style="width:52px;">
+      <input id="newSlotStart" type="number" min="0" max="23" placeholder="開始" style="width:56px;">
+      <span class="sep">–</span>
+      <input id="newSlotEnd" type="number" min="0" max="23" placeholder="結束" style="width:56px;">
+      <button onclick="addEventSlot()">＋新增時段</button>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📋 貼上名單</div>
+    <div class="hint" style="margin-bottom:8px;">
+      每個時段用一個標題開頭（標題內要包含時段代碼與時間，例如「🫰🏻3B｜19:00–22:00」），下面的成員格式為 <code>時段代碼+方案代碼-姓名</code>，例如 <code>3BW-Johnson哥</code>，後面可以再加「-」接付款資訊（例如 <code>-Line pay 750, 8/25</code>，會自動偵測付款方式）。
+    </div>
+    <textarea id="eventPasteInput" placeholder="🫰🏻3B｜19:00–22:00&#10;1. 3BW-Johnson哥-Line pay 750, 8/25&#10;2. 3BX-Rulu"></textarea>
+    <button class="btn-primary" onclick="parseEventRoster()">自動解析並帶入 →</button>
+  </div>
+
+  <div class="field-label">成員清單（<span id="eventCount">0</span> 人）</div>
+  <div class="member-list" id="eventMemberList"></div>
+
+  <div class="summary-card" id="eventSummaryCard"></div>
+</div>
+
 <script>
-let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{} };
+let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{}, eventTitle:'', eventDate:'', eventPlans:[], eventSlots:[], eventMembers:[], eventPasteText:'' };
 let saveTimer = null;
 
 
@@ -1065,12 +1122,19 @@ async function loadState(){
   if(!state.sessionDate){ state.sessionDate = isoToday(); }
   if(!state.sessions){ state.sessions = {}; }
   if(!state.playerLevels){ state.playerLevels = {}; }
+  if(state.eventTitle===undefined){ state.eventTitle = ''; }
+  if(state.eventDate===undefined){ state.eventDate = ''; }
+  if(!state.eventPlans){ state.eventPlans = []; }
+  if(!state.eventSlots){ state.eventSlots = []; }
+  if(!state.eventMembers){ state.eventMembers = []; }
+  if(state.eventPasteText===undefined){ state.eventPasteText = ''; }
   // 用現有名單資料回填固定球友的級數登記表（若尚未有登記）
   (state.members||[]).forEach(m=>{
     if(m.level && !state.playerLevels[m.name]){ state.playerLevels[m.name] = m.level; }
   });
   syncCurrentIntoArchive();
   document.getElementById('pasteInput').value = state.pasteText || '';
+  document.getElementById('eventPasteInput').value = state.eventPasteText || '';
   scheduleSave();
   render();
 }
@@ -1094,6 +1158,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('panel-collect').classList.toggle('hidden', which!=='collect');
     document.getElementById('panel-weekday').classList.toggle('hidden', which!=='weekday');
     document.getElementById('panel-calendar').classList.toggle('hidden', which!=='calendar');
+    document.getElementById('panel-event').classList.toggle('hidden', which!=='event');
     if(which==='calendar'){ renderCalendarTab(); }
   });
 });
@@ -1179,6 +1244,7 @@ function render(){
   renderMembers();
   renderSummary();
   renderHourly();
+  renderEventPanel();
   document.getElementById('tabCount').textContent = state.members.length;
 }
 
@@ -1977,6 +2043,240 @@ function parseAndImport(){
 }
 
 loadState();
+
+// ==================== SPECIAL EVENT MODE ====================
+
+function updateEventField(field, value){
+  state[field === 'title' ? 'eventTitle' : 'eventDate'] = value;
+  scheduleSave();
+}
+
+function findEventPlan(code){
+  return state.eventPlans.find(p => p.code.toLowerCase() === String(code).toLowerCase());
+}
+function findEventSlot(code){
+  return state.eventSlots.find(s => s.code.toLowerCase() === String(code).toLowerCase());
+}
+function computeEventPrice(planCode, duration){
+  const plan = findEventPlan(planCode);
+  if(!plan) return null;
+  if(duration===3) return Number.isFinite(plan.price3) ? plan.price3 : null;
+  if(duration===4) return Number.isFinite(plan.price4) ? plan.price4 : null;
+  return null;
+}
+
+function addEventPlan(){
+  const code = document.getElementById('newPlanCode').value.trim();
+  const label = document.getElementById('newPlanLabel').value.trim();
+  const price3 = Number(document.getElementById('newPlan3h').value);
+  const price4 = Number(document.getElementById('newPlan4h').value);
+  if(!code || !label){ showToast('請輸入代碼與方案內容'); return; }
+  if(findEventPlan(code)){ showToast('這個代碼已經存在囉'); return; }
+  state.eventPlans.push({ id: uid(), code, label,
+    price3: Number.isFinite(price3) && price3>0 ? price3 : null,
+    price4: Number.isFinite(price4) && price4>0 ? price4 : null });
+  document.getElementById('newPlanCode').value = '';
+  document.getElementById('newPlanLabel').value = '';
+  document.getElementById('newPlan3h').value = '';
+  document.getElementById('newPlan4h').value = '';
+  scheduleSave();
+  render();
+}
+function deleteEventPlan(id){
+  state.eventPlans = state.eventPlans.filter(p=>p.id!==id);
+  scheduleSave();
+  render();
+}
+
+function addEventSlot(){
+  const code = document.getElementById('newSlotCode').value.trim();
+  const start = Number(document.getElementById('newSlotStart').value);
+  const end = Number(document.getElementById('newSlotEnd').value);
+  if(!code){ showToast('請輸入時段代碼'); return; }
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end<=start){ showToast('請輸入正確的開始/結束時間'); return; }
+  if(findEventSlot(code)){ showToast('這個時段代碼已經存在囉'); return; }
+  state.eventSlots.push({ id: uid(), code, start, end });
+  document.getElementById('newSlotCode').value = '';
+  document.getElementById('newSlotStart').value = '';
+  document.getElementById('newSlotEnd').value = '';
+  scheduleSave();
+  render();
+}
+function deleteEventSlot(id){
+  state.eventSlots = state.eventSlots.filter(s=>s.id!==id);
+  scheduleSave();
+  render();
+}
+
+function renderEventPanel(){
+  document.getElementById('eventTitleInput').value = state.eventTitle || '';
+  document.getElementById('eventDateInput').value = state.eventDate || '';
+
+  const planEl = document.getElementById('eventPlanList');
+  planEl.innerHTML = state.eventPlans.length===0
+    ? '<div class="hint" style="margin:0;">尚無方案，請於下方新增。</div>'
+    : state.eventPlans.map(p=>`
+      <div class="rule-row">
+        <div class="rr-time">${escapeHtml(p.code)}｜${escapeHtml(p.label)}</div>
+        <div class="rr-price">${p.price3?('3H $'+p.price3):''}${p.price4?(' / 4H $'+p.price4):''}</div>
+        <button class="rr-del" onclick="deleteEventPlan('${p.id}')">✕</button>
+      </div>`).join('');
+
+  const slotEl = document.getElementById('eventSlotList');
+  slotEl.innerHTML = state.eventSlots.length===0
+    ? '<div class="hint" style="margin:0;">尚無時段，請於下方新增。</div>'
+    : state.eventSlots.map(s=>`
+      <div class="rule-row">
+        <div class="rr-time">${escapeHtml(s.code)}｜${s.start}:00–${s.end}:00（${s.end-s.start}H）</div>
+        <button class="rr-del" onclick="deleteEventSlot('${s.id}')">✕</button>
+      </div>`).join('');
+
+  document.getElementById('eventCount').textContent = state.eventMembers.length;
+
+  const memEl = document.getElementById('eventMemberList');
+  if(state.eventMembers.length===0){
+    memEl.innerHTML = '<div class="empty-state">尚未有成員<br>請先設定方案與時段，再貼上名單匯入</div>';
+  } else {
+    memEl.innerHTML = state.eventMembers.map((m,i)=>{
+      const priceKnown = m.price!==null && m.price!==undefined && m.price!=='';
+      const priceDisplay = priceKnown ? `$${m.price}` : '請設定';
+      const method = m.payMethod || null;
+      const cardClass = method==='cash' ? 'cash' : (method==='linepay' ? 'linepay' : (method==='waived' ? 'waived' : ''));
+      const payClass = method==='cash' ? 'cash' : (method==='linepay' ? 'linepay' : (method==='waived' ? 'waived' : 'unpaid'));
+      const payLabel = method==='cash' ? '現金' : (method==='linepay' ? 'Line Pay' : (method==='waived' ? '不用收' : '未收 →'));
+      return `
+      <div class="member-card ${cardClass}">
+        <div class="mc-top">
+          <div class="mc-idx">${i+1}</div>
+          <div class="mc-name">${escapeHtml(m.name)}</div>
+        </div>
+        <div class="mc-meta-row">
+          <div class="mc-price ${priceKnown?'':'warn'}">${priceDisplay}</div>
+          <span class="wd-label">${escapeHtml(m.slotCode||'')}${m.planCode?('・'+escapeHtml(m.planCode)+' '+escapeHtml(m.planLabel||'')):''}</span>
+          <button class="mc-pay ${payClass}" onclick="cycleEventPay('${m.id}')">${payLabel}</button>
+          <button class="mc-del" onclick="deleteEventMember('${m.id}')">✕</button>
+        </div>
+        ${!priceKnown ? `<div class="mc-time"><input type="number" min="0" placeholder="手動金額" style="width:100px" onchange="updateEventMemberPrice('${m.id}',this.value)"></div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('eventSummaryCard').innerHTML = buildSummaryHTML(state.eventMembers, '活動小結');
+}
+
+function cycleEventPay(id){
+  const m = state.eventMembers.find(m=>m.id===id);
+  if(!m) return;
+  const order = [null, 'cash', 'linepay', 'waived'];
+  const idx = order.indexOf(m.payMethod || null);
+  m.payMethod = order[(idx+1)%order.length];
+  scheduleSave();
+  render();
+}
+function deleteEventMember(id){
+  state.eventMembers = state.eventMembers.filter(m=>m.id!==id);
+  scheduleSave();
+  render();
+}
+function updateEventMemberPrice(id, value){
+  const m = state.eventMembers.find(m=>m.id===id);
+  if(!m) return;
+  const v = Number(value);
+  m.price = Number.isFinite(v) && v>=0 ? v : null;
+  scheduleSave();
+  render();
+}
+
+document.getElementById('eventPasteInput').addEventListener('input', e=>{
+  state.eventPasteText = e.target.value;
+  scheduleSave();
+});
+
+function parseEventRoster(){
+  const raw = toHalfWidth(document.getElementById('eventPasteInput').value);
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+
+  const headerTimeRe = /(\d{1,2}):?(\d{2})?\s*[-–~]\s*(\d{1,2}):?(\d{2})?/;
+  const headerCodeRe = /(\d[A-Za-z])/;
+  const memberLineRe = /^\d+[\.\、]\s*(.*)$/;
+  // e.g. "3BW-Johnson哥-Line pay 750, 8/25"  ->  slotCode="3B" planCode="W" rest="Johnson哥-Line pay 750, 8/25"
+  const codeLineRe = /^(\d[A-Za-z])([A-Za-z])-(.+)$/;
+
+  let curSlotCode = null, curStart = null, curEnd = null;
+  const parsed = [];
+
+  for(const line of lines){
+    const memberMatch = line.match(memberLineRe);
+    if(memberMatch){
+      const content = memberMatch[1].trim();
+      if(content.length===0) continue; // blank numbered row, not signed up yet
+      const codeMatch = content.match(codeLineRe);
+      let slotCode = curSlotCode, start = curStart, end = curEnd, planCode = null, name = content;
+      if(codeMatch){
+        slotCode = codeMatch[1];
+        planCode = codeMatch[2].toUpperCase();
+        const restParts = codeMatch[3].split('-');
+        name = restParts[0].trim();
+        const extra = restParts.slice(1).join('-');
+        const slotDef = findEventSlot(slotCode);
+        if(slotDef){ start = slotDef.start; end = slotDef.end; }
+        parsed.push({ name, slotCode, planCode, start, end, extra });
+      } else if(curSlotCode){
+        // no inline code — fall back to current header's slot, no plan detected
+        parsed.push({ name: content, slotCode: curSlotCode, planCode: null, start: curStart, end: curEnd, extra: '' });
+      }
+    } else {
+      // header line: look for a slot code + time range
+      const codeMatch = line.match(headerCodeRe);
+      const timeMatch = line.match(headerTimeRe);
+      if(codeMatch){ curSlotCode = codeMatch[1]; }
+      if(timeMatch){
+        curStart = Number(timeMatch[1]);
+        curEnd = Number(timeMatch[3]);
+      } else if(curSlotCode){
+        const slotDef = findEventSlot(curSlotCode);
+        if(slotDef){ curStart = slotDef.start; curEnd = slotDef.end; }
+      }
+    }
+  }
+
+  if(parsed.length===0){ showToast('沒有解析到任何成員，請確認格式'); return; }
+
+  const existingByName = {};
+  state.eventMembers.forEach(m=>{
+    (existingByName[m.name] = existingByName[m.name] || []).push(m);
+  });
+
+  state.eventMembers = parsed.map(p=>{
+    const pool = existingByName[p.name];
+    const prev = pool && pool.length ? pool.shift() : null;
+    const duration = (p.start!==null && p.end!==null) ? (p.end - p.start) : null;
+    const plan = p.planCode ? findEventPlan(p.planCode) : null;
+    const base = (p.planCode && duration!==null) ? computeEventPrice(p.planCode, duration) : null;
+
+    let payMethod = prev ? (prev.payMethod || null) : null;
+    if(!prev && p.extra){
+      if(/line\s*pay/i.test(p.extra)) payMethod = 'linepay';
+      else if(/現金|cash/i.test(p.extra)) payMethod = 'cash';
+    }
+
+    return {
+      id: prev ? prev.id : uid(),
+      name: p.name,
+      slotCode: p.slotCode,
+      planCode: p.planCode,
+      planLabel: plan ? plan.label : '',
+      start: p.start, end: p.end,
+      price: base!==null ? base : (prev ? prev.price : null),
+      payMethod
+    };
+  });
+
+  scheduleSave();
+  render();
+  document.querySelector('.tab[data-tab="event"]').click();
+}
+
 </script>
 </body>
 </html>
