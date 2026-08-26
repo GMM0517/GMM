@@ -984,6 +984,7 @@
   <div class="member-list" id="eventMemberList"></div>
 
   <div class="summary-card" id="eventSummaryCard"></div>
+  <div class="section-card hourly-card" id="eventHourlyCard"></div>
 </div>
 
 <script>
@@ -1404,13 +1405,14 @@ function buildSummaryHTML(members, label){
 }
 
 function buildHourlyHTML(members){
-  if(members.length===0) return '';
+  const timed = members.filter(m => Number.isFinite(m.start) && Number.isFinite(m.end));
+  if(timed.length===0) return '';
   let min=24, max=0;
-  members.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
+  timed.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
   if(min>=max) return '';
   const counts = [];
   for(let h=min; h<max; h++){
-    const c = members.filter(m=>m.start<=h && m.end>h).length;
+    const c = timed.filter(m=>m.start<=h && m.end>h).length;
     counts.push({h,c});
   }
   const maxC = Math.max(...counts.map(x=>x.c), 1);
@@ -2152,7 +2154,7 @@ function renderEventPanel(){
         </div>
         <div class="mc-meta-row">
           <div class="mc-price ${priceKnown?'':'warn'}">${priceDisplay}</div>
-          <span class="wd-label">${escapeHtml(m.slotCode||'')}${m.planCode?('・'+escapeHtml(m.planCode)+' '+escapeHtml(m.planLabel||'')):''}</span>
+          <span class="wd-label">${m.start!==null&&m.start!==undefined?(m.start+':00–'+m.end+':00'):''}${m.slotCode?('・'+escapeHtml(m.slotCode)):''}${m.planCode?('・'+escapeHtml(m.planCode)+' '+escapeHtml(m.planLabel||'')):''}</span>
           <button class="mc-pay ${payClass}" onclick="cycleEventPay('${m.id}')">${payLabel}</button>
           <button class="mc-del" onclick="deleteEventMember('${m.id}')">✕</button>
         </div>
@@ -2162,6 +2164,7 @@ function renderEventPanel(){
   }
 
   document.getElementById('eventSummaryCard').innerHTML = buildSummaryHTML(state.eventMembers, '活動小結');
+  document.getElementById('eventHourlyCard').innerHTML = buildHourlyHTML(state.eventMembers);
 }
 
 function cycleEventPay(id){
