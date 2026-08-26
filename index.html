@@ -2048,6 +2048,27 @@ loadState();
 
 // ==================== SPECIAL EVENT MODE ====================
 
+function buildEventPlanStatsHTML(){
+  if(state.eventMembers.length===0) return '';
+  const counts = {};
+  state.eventMembers.forEach(m=>{
+    const key = m.planCode || '未分類';
+    counts[key] = (counts[key]||0) + 1;
+  });
+  const order = state.eventPlans.map(p=>p.code).concat(Object.keys(counts).filter(k=>!state.eventPlans.some(p=>p.code===k)));
+  const chips = order.filter(code=>counts[code]).map(code=>{
+    const plan = findEventPlan(code);
+    const label = plan ? `${code}｜${plan.label}` : code;
+    return `<span class="group-chip">${escapeHtml(label)} <b>× ${counts[code]} 人</b></span>`;
+  }).join('');
+  return `
+    <div class="summary-title-row">
+      <div class="left">方案統計</div>
+    </div>
+    <div class="group-chips">${chips}</div>
+  `;
+}
+
 function updateEventField(field, value){
   state[field === 'title' ? 'eventTitle' : 'eventDate'] = value;
   scheduleSave();
@@ -2163,7 +2184,7 @@ function renderEventPanel(){
     }).join('');
   }
 
-  document.getElementById('eventSummaryCard').innerHTML = buildSummaryHTML(state.eventMembers, '活動小結');
+  document.getElementById('eventSummaryCard').innerHTML = buildEventPlanStatsHTML() + buildSummaryHTML(state.eventMembers, '活動小結');
   document.getElementById('eventHourlyCard').innerHTML = buildHourlyHTML(state.eventMembers);
 }
 
