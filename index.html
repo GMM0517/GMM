@@ -954,6 +954,7 @@
       <input id="newPlanLabel" placeholder="方案內容" style="width:120px;">
       <input id="newPlan3h" type="number" min="0" placeholder="3H價" style="width:64px;">
       <input id="newPlan4h" type="number" min="0" placeholder="4H價" style="width:64px;">
+      <input id="newPlan5h" type="number" min="0" placeholder="5H價" style="width:64px;">
       <button onclick="addEventPlan()">＋新增方案</button>
     </div>
   </div>
@@ -2085,6 +2086,7 @@ function computeEventPrice(planCode, duration){
   if(!plan) return null;
   if(duration===3) return Number.isFinite(plan.price3) ? plan.price3 : null;
   if(duration===4) return Number.isFinite(plan.price4) ? plan.price4 : null;
+  if(duration===5) return Number.isFinite(plan.price5) ? plan.price5 : null;
   return null;
 }
 
@@ -2093,15 +2095,18 @@ function addEventPlan(){
   const label = document.getElementById('newPlanLabel').value.trim();
   const price3 = Number(document.getElementById('newPlan3h').value);
   const price4 = Number(document.getElementById('newPlan4h').value);
+  const price5 = Number(document.getElementById('newPlan5h').value);
   if(!code || !label){ showToast('請輸入代碼與方案內容'); return; }
   if(findEventPlan(code)){ showToast('這個代碼已經存在囉'); return; }
   state.eventPlans.push({ id: uid(), code, label,
     price3: Number.isFinite(price3) && price3>0 ? price3 : null,
-    price4: Number.isFinite(price4) && price4>0 ? price4 : null });
+    price4: Number.isFinite(price4) && price4>0 ? price4 : null,
+    price5: Number.isFinite(price5) && price5>0 ? price5 : null });
   document.getElementById('newPlanCode').value = '';
   document.getElementById('newPlanLabel').value = '';
   document.getElementById('newPlan3h').value = '';
   document.getElementById('newPlan4h').value = '';
+  document.getElementById('newPlan5h').value = '';
   scheduleSave();
   render();
 }
@@ -2141,7 +2146,7 @@ function renderEventPanel(){
     : state.eventPlans.map(p=>`
       <div class="rule-row">
         <div class="rr-time">${escapeHtml(p.code)}｜${escapeHtml(p.label)}</div>
-        <div class="rr-price">${p.price3?('3H $'+p.price3):''}${p.price4?(' / 4H $'+p.price4):''}</div>
+        <div class="rr-price">${p.price3?('3H $'+p.price3):''}${p.price4?(' / 4H $'+p.price4):''}${p.price5?(' / 5H $'+p.price5):''}</div>
         <button class="rr-del" onclick="deleteEventPlan('${p.id}')">✕</button>
       </div>`).join('');
 
