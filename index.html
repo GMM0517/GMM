@@ -942,7 +942,7 @@
       <div><label class="tr-label">活動名稱</label><input id="eventTitleInput" placeholder="例如：中秋變裝羽球晚會" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('title',this.value)"></div>
     </div>
     <div class="field-row" style="margin-top:10px;">
-      <div><label class="tr-label">活動日期</label><input type="date" id="eventDateInput" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('date',this.value)"></div>
+      <div><label class="tr-label">活動日期</label><input type="date" id="eventDateInput" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="switchEventDate(this.value)"></div>
     </div>
   </div>
 
@@ -989,7 +989,7 @@
 </div>
 
 <script>
-let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{}, eventTitle:'', eventDate:'', eventPlans:[], eventSlots:[], eventMembers:[], eventPasteText:'' };
+let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{}, eventTitle:'', eventDate:'', eventPlans:[], eventSlots:[], eventMembers:[], eventPasteText:'', eventArchive:{} };
 let saveTimer = null;
 
 
@@ -1130,6 +1130,7 @@ async function loadState(){
   if(!state.eventSlots){ state.eventSlots = []; }
   if(!state.eventMembers){ state.eventMembers = []; }
   if(state.eventPasteText===undefined){ state.eventPasteText = ''; }
+  if(!state.eventArchive){ state.eventArchive = {}; }
   // 用現有名單資料回填固定球友的級數登記表（若尚未有登記）
   (state.members||[]).forEach(m=>{
     if(m.level && !state.playerLevels[m.name]){ state.playerLevels[m.name] = m.level; }
@@ -1143,6 +1144,7 @@ async function loadState(){
 
 function scheduleSave(){
   syncCurrentIntoArchive();
+  syncEventIntoArchive();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
     try{ await storage.set('badminton-state', JSON.stringify(state)); }
@@ -2068,6 +2070,36 @@ function buildEventPlanStatsHTML(){
     </div>
     <div class="group-chips">${chips}</div>
   `;
+}
+
+function syncEventIntoArchive(){
+  if(!state.eventDate) return;
+  state.eventArchive[state.eventDate] = {
+    eventTitle: state.eventTitle,
+    eventPlans: state.eventPlans,
+    eventSlots: state.eventSlots,
+    eventMembers: state.eventMembers,
+    eventPasteText: state.eventPasteText
+  };
+}
+
+function switchEventDate(newDate){
+  syncEventIntoArchive(); // save whatever was on-screen under the OLD date first
+  state.eventDate = newDate;
+  const existing = state.eventArchive[newDate];
+  if(existing){
+    state.eventTitle = existing.eventTitle || '';
+    state.eventPlans = existing.eventPlans || [];
+    state.eventSlots = existing.eventSlots || [];
+    state.eventMembers = existing.eventMembers || [];
+    state.eventPasteText = existing.eventPasteText || '';
+  }
+  // if no snapshot exists yet for this date, keep whatever is currently on
+  // screen as-is (e.g. a title typed before picking a date) instead of
+  // wiping it — nothing is lost either way.
+  document.getElementById('eventPasteInput').value = state.eventPasteText || '';
+  scheduleSave();
+  render();
 }
 
 function updateEventField(field, value){
