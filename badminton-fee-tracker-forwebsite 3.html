@@ -942,7 +942,7 @@
       <div><label class="tr-label">活動名稱</label><input id="eventTitleInput" placeholder="例如：中秋變裝羽球晚會" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('title',this.value)"></div>
     </div>
     <div class="field-row" style="margin-top:10px;">
-      <div><label class="tr-label">活動日期</label><input type="date" id="eventDateInput" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="updateEventField('date',this.value)"></div>
+      <div><label class="tr-label">活動日期</label><input type="date" id="eventDateInput" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;" onchange="switchEventDate(this.value)"></div>
     </div>
   </div>
 
@@ -954,6 +954,7 @@
       <input id="newPlanLabel" placeholder="方案內容" style="width:120px;">
       <input id="newPlan3h" type="number" min="0" placeholder="3H價" style="width:64px;">
       <input id="newPlan4h" type="number" min="0" placeholder="4H價" style="width:64px;">
+      <input id="newPlan5h" type="number" min="0" placeholder="5H價" style="width:64px;">
       <button onclick="addEventPlan()">＋新增方案</button>
     </div>
   </div>
@@ -984,10 +985,11 @@
   <div class="member-list" id="eventMemberList"></div>
 
   <div class="summary-card" id="eventSummaryCard"></div>
+  <div class="section-card hourly-card" id="eventHourlyCard"></div>
 </div>
 
 <script>
-let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{}, eventTitle:'', eventDate:'', eventPlans:[], eventSlots:[], eventMembers:[], eventPasteText:'' };
+let state = { title:"場次", rules:[], members:[], pasteText:"", weekday: new Date().getDay(), weekdayTimeRules:[], weekdayDurationRules:[], genericRules:{ singleHourPrice:100, extraHourAddOn:90 }, sessionDate: isoToday(), sessions:{}, playerLevels:{}, eventTitle:'', eventDate:'', eventPlans:[], eventSlots:[], eventMembers:[], eventPasteText:'', eventArchive:{} };
 let saveTimer = null;
 
 
@@ -1128,6 +1130,7 @@ async function loadState(){
   if(!state.eventSlots){ state.eventSlots = []; }
   if(!state.eventMembers){ state.eventMembers = []; }
   if(state.eventPasteText===undefined){ state.eventPasteText = ''; }
+  if(!state.eventArchive){ state.eventArchive = {}; }
   // 用現有名單資料回填固定球友的級數登記表（若尚未有登記）
   (state.members||[]).forEach(m=>{
     if(m.level && !state.playerLevels[m.name]){ state.playerLevels[m.name] = m.level; }
@@ -1141,6 +1144,7 @@ async function loadState(){
 
 function scheduleSave(){
   syncCurrentIntoArchive();
+  syncEventIntoArchive();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
     try{ await storage.set('badminton-state', JSON.stringify(state)); }
@@ -1404,13 +1408,14 @@ function buildSummaryHTML(members, label){
 }
 
 function buildHourlyHTML(members){
-  if(members.length===0) return '';
+  const timed = members.filter(m => Number.isFinite(m.start) && Number.isFinite(m.end));
+  if(timed.length===0) return '';
   let min=24, max=0;
-  members.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
+  timed.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
   if(min>=max) return '';
   const counts = [];
   for(let h=min; h<max; h++){
-    const c = members.filter(m=>m.start<=h && m.end>h).length;
+    const c = timed.filter(m=>m.start<=h && m.end>h).length;
     counts.push({h,c});
   }
   const maxC = Math.max(...counts.map(x=>x.c), 1);
@@ -2046,6 +2051,57 @@ loadState();
 
 // ==================== SPECIAL EVENT MODE ====================
 
+function buildEventPlanStatsHTML(){
+  if(state.eventMembers.length===0) return '';
+  const counts = {};
+  state.eventMembers.forEach(m=>{
+    const key = m.planCode || '未分類';
+    counts[key] = (counts[key]||0) + 1;
+  });
+  const order = state.eventPlans.map(p=>p.code).concat(Object.keys(counts).filter(k=>!state.eventPlans.some(p=>p.code===k)));
+  const chips = order.filter(code=>counts[code]).map(code=>{
+    const plan = findEventPlan(code);
+    const label = plan ? `${code}｜${plan.label}` : code;
+    return `<span class="group-chip">${escapeHtml(label)} <b>× ${counts[code]} 人</b></span>`;
+  }).join('');
+  return `
+    <div class="summary-title-row">
+      <div class="left">方案統計</div>
+    </div>
+    <div class="group-chips">${chips}</div>
+  `;
+}
+
+function syncEventIntoArchive(){
+  if(!state.eventDate) return;
+  state.eventArchive[state.eventDate] = {
+    eventTitle: state.eventTitle,
+    eventPlans: state.eventPlans,
+    eventSlots: state.eventSlots,
+    eventMembers: state.eventMembers,
+    eventPasteText: state.eventPasteText
+  };
+}
+
+function switchEventDate(newDate){
+  syncEventIntoArchive(); // save whatever was on-screen under the OLD date first
+  state.eventDate = newDate;
+  const existing = state.eventArchive[newDate];
+  if(existing){
+    state.eventTitle = existing.eventTitle || '';
+    state.eventPlans = existing.eventPlans || [];
+    state.eventSlots = existing.eventSlots || [];
+    state.eventMembers = existing.eventMembers || [];
+    state.eventPasteText = existing.eventPasteText || '';
+  }
+  // if no snapshot exists yet for this date, keep whatever is currently on
+  // screen as-is (e.g. a title typed before picking a date) instead of
+  // wiping it — nothing is lost either way.
+  document.getElementById('eventPasteInput').value = state.eventPasteText || '';
+  scheduleSave();
+  render();
+}
+
 function updateEventField(field, value){
   state[field === 'title' ? 'eventTitle' : 'eventDate'] = value;
   scheduleSave();
@@ -2062,6 +2118,7 @@ function computeEventPrice(planCode, duration){
   if(!plan) return null;
   if(duration===3) return Number.isFinite(plan.price3) ? plan.price3 : null;
   if(duration===4) return Number.isFinite(plan.price4) ? plan.price4 : null;
+  if(duration===5) return Number.isFinite(plan.price5) ? plan.price5 : null;
   return null;
 }
 
@@ -2070,15 +2127,18 @@ function addEventPlan(){
   const label = document.getElementById('newPlanLabel').value.trim();
   const price3 = Number(document.getElementById('newPlan3h').value);
   const price4 = Number(document.getElementById('newPlan4h').value);
+  const price5 = Number(document.getElementById('newPlan5h').value);
   if(!code || !label){ showToast('請輸入代碼與方案內容'); return; }
   if(findEventPlan(code)){ showToast('這個代碼已經存在囉'); return; }
   state.eventPlans.push({ id: uid(), code, label,
     price3: Number.isFinite(price3) && price3>0 ? price3 : null,
-    price4: Number.isFinite(price4) && price4>0 ? price4 : null });
+    price4: Number.isFinite(price4) && price4>0 ? price4 : null,
+    price5: Number.isFinite(price5) && price5>0 ? price5 : null });
   document.getElementById('newPlanCode').value = '';
   document.getElementById('newPlanLabel').value = '';
   document.getElementById('newPlan3h').value = '';
   document.getElementById('newPlan4h').value = '';
+  document.getElementById('newPlan5h').value = '';
   scheduleSave();
   render();
 }
@@ -2118,7 +2178,7 @@ function renderEventPanel(){
     : state.eventPlans.map(p=>`
       <div class="rule-row">
         <div class="rr-time">${escapeHtml(p.code)}｜${escapeHtml(p.label)}</div>
-        <div class="rr-price">${p.price3?('3H $'+p.price3):''}${p.price4?(' / 4H $'+p.price4):''}</div>
+        <div class="rr-price">${p.price3?('3H $'+p.price3):''}${p.price4?(' / 4H $'+p.price4):''}${p.price5?(' / 5H $'+p.price5):''}</div>
         <button class="rr-del" onclick="deleteEventPlan('${p.id}')">✕</button>
       </div>`).join('');
 
@@ -2152,7 +2212,7 @@ function renderEventPanel(){
         </div>
         <div class="mc-meta-row">
           <div class="mc-price ${priceKnown?'':'warn'}">${priceDisplay}</div>
-          <span class="wd-label">${escapeHtml(m.slotCode||'')}${m.planCode?('・'+escapeHtml(m.planCode)+' '+escapeHtml(m.planLabel||'')):''}</span>
+          <span class="wd-label">${m.start!==null&&m.start!==undefined?(m.start+':00–'+m.end+':00'):''}${m.slotCode?('・'+escapeHtml(m.slotCode)):''}${m.planCode?('・'+escapeHtml(m.planCode)+' '+escapeHtml(m.planLabel||'')):''}</span>
           <button class="mc-pay ${payClass}" onclick="cycleEventPay('${m.id}')">${payLabel}</button>
           <button class="mc-del" onclick="deleteEventMember('${m.id}')">✕</button>
         </div>
@@ -2161,7 +2221,8 @@ function renderEventPanel(){
     }).join('');
   }
 
-  document.getElementById('eventSummaryCard').innerHTML = buildSummaryHTML(state.eventMembers, '活動小結');
+  document.getElementById('eventSummaryCard').innerHTML = buildEventPlanStatsHTML() + buildSummaryHTML(state.eventMembers, '活動小結');
+  document.getElementById('eventHourlyCard').innerHTML = buildHourlyHTML(state.eventMembers);
 }
 
 function cycleEventPay(id){
