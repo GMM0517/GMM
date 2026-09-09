@@ -1,1 +1,342 @@
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>115年領隊口試練習 App</title>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --surface1: #ffffff;
+  --surface2: #f0f0f5;
+  --border: #d1d1d6;
+  --border-strong: #b0b0b8;
+  --text-primary: #1c1c1e;
+  --text-secondary: #48484a;
+  --text-muted: #8e8e93;
+  --accent: #007aff;
+  --accent-hover: #0060df;
+  --on-accent: #fff;
+  --success-bg: #f0fdf4;
+  --success-border: #86efac;
+  --success-text: #15803d;
+  --info-bg: #eff6ff;
+  --info-border: #93c5fd;
+  --info-text: #1d4ed8;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text-primary); min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding: 1rem; }
+h1.page-title { font-size: 15px; font-weight: 600; text-align: center; color: var(--text-secondary); margin-bottom: 0.75rem; }
 
+/* Tabs */
+.tab-row { display: flex; gap: 4px; margin-bottom: 0.75rem; }
+.tab { flex: 1; height: 34px; border: 0.5px solid var(--border); border-radius: var(--radius); background: transparent; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.tab.active { background: var(--surface1); color: var(--text-primary); font-weight: 600; border-color: var(--border-strong); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+/* Inputs */
+select, input[type=text] { height: 36px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); background: var(--surface1); color: var(--text-primary); font-size: 13px; padding: 0 10px; width: 100%; }
+.select-row { display: flex; gap: 8px; margin-bottom: 0.6rem; align-items: center; }
+.select-row select { flex: 1; }
+.name-row { display: flex; gap: 8px; align-items: center; margin-bottom: 0.6rem; }
+.name-row label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.name-row input { flex: 1; }
+
+/* Buttons */
+.btn { height: 36px; padding: 0 14px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); background: var(--surface1); color: var(--text-primary); font-size: 13px; cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--surface2); }
+.btn-accent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-hover); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 11px; }
+.action-row { display: flex; gap: 6px; margin-bottom: 0.6rem; }
+.action-row .btn { flex: 1; font-size: 12px; }
+
+/* Stats */
+.stats { display: flex; gap: 6px; margin-bottom: 0.6rem; }
+.stat { flex: 1; background: var(--surface1); border-radius: var(--radius); padding: 8px 4px; text-align: center; border: 0.5px solid var(--border); }
+.stat-n { font-size: 20px; font-weight: 600; }
+.stat-l { font-size: 10px; color: var(--text-muted); }
+.progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+/* Timers */
+.timers { display: flex; gap: 8px; margin-bottom: 0.6rem; }
+.timer-block { flex: 1; background: var(--surface1); border: 0.5px solid var(--border); border-radius: 10px; padding: 0.6rem 0.75rem; }
+.t-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+.t-count { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.t-count.warn { color: var(--warn); }
+.t-count.danger { color: var(--danger); }
+.t-btns { display: flex; gap: 4px; margin-top: 4px; }
+.t-btns .btn { flex: 1; height: 26px; font-size: 11px; }
+
+/* Cards */
+.card { border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.6rem; }
+.card-q { background: var(--surface1); border: 0.5px solid var(--border); }
+.card-intro { background: var(--surface2); border: 0.5px solid var(--border); }
+.card-topic { background: var(--info-bg); border: 0.5px solid var(--info-border); }
+.card-ans { background: var(--success-bg); border: 0.5px solid var(--success-border); }
+.card-detail { background: var(--surface1); border: 0.5px solid var(--border); }
+.badge { display: inline-block; font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 8px; margin-bottom: 6px; }
+.badge-gray { background: var(--surface2); color: var(--text-muted); border: 0.5px solid var(--border); }
+.badge-blue { background: var(--info-bg); color: var(--info-text); }
+.badge-green { background: #dcfce7; color: var(--success-text); }
+.badge-orange { background: #fff7ed; color: #c2410c; }
+.q-text { font-size: 14px; font-weight: 500; line-height: 1.65; }
+.body-text { font-size: 13px; line-height: 1.75; color: var(--text-primary); }
+.placeholder { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; min-height: 70px; }
+.step-item { display: flex; gap: 8px; margin-bottom: 9px; font-size: 13px; line-height: 1.6; }
+.step-num { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+
+/* Info */
+.info-block { background: var(--surface1); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 0.6rem; font-size: 12px; color: var(--text-secondary); line-height: 1.8; border-left: 3px solid var(--accent); }
+.info-block b { color: var(--text-primary); }
+
+/* Header card */
+.header-card { background: var(--surface1); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+.header-card h2 { font-size: 13px; font-weight: 600; line-height: 1.5; margin-bottom: 6px; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.meta-item { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+.meta-item span { color: var(--text-secondary); font-weight: 600; display: block; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="page-title">115年領隊人員職前訓練外語口試練習</h1>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('practice')">練習模式</button>
+    <button class="tab" onclick="switchTab('script')">口試腳本</button>
+    <button class="tab" onclick="switchTab('info')">考試資訊</button>
+  </div>
+
+  <!-- PRACTICE -->
+  <div id="tab-practice">
+    <div class="name-row">
+      <label>考生姓名</label>
+      <input type="text" id="name-input" placeholder="輸入你的名字" value="" oninput="renderIntro()">
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="stat-total">40</div><div class="stat-l">總題數</div></div>
+      <div class="stat"><div class="stat-n" id="stat-done">0</div><div class="stat-l">已練習</div></div>
+      <div class="stat"><div class="stat-n" id="stat-remain">40</div><div class="stat-l">未練習</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="select-row">
+      <select id="cat-select" onchange="filterCat()">
+        <option value="">全部類別</option>
+        <option value="機場/航班">機場/航班</option>
+        <option value="住宿">住宿</option>
+        <option value="行程">行程</option>
+        <option value="緊急事故">緊急事故</option>
+        <option value="證件">證件</option>
+        <option value="消費">消費</option>
+        <option value="人身安全">人身安全</option>
+        <option value="天災">天災</option>
+      </select>
+      <button class="btn btn-accent" onclick="drawRandom()">隨機抽題</button>
+    </div>
+    <div class="select-row">
+      <select id="question-select" onchange="onSelectChange()">
+        <option value="">選擇題號…</option>
+      </select>
+    </div>
+    <div class="timers">
+      <div class="timer-block">
+        <div class="t-label">⏱ 思考時間</div>
+        <div class="t-count" id="t1-display">8:00</div>
+        <div class="t-btns">
+          <button class="btn btn-sm" id="t1-btn" onclick="toggleTimer(1)">開始</button>
+          <button class="btn btn-sm" onclick="resetTimer(1)">重置</button>
+        </div>
+      </div>
+      <div class="timer-block">
+        <div class="t-label">🎤 上台時間</div>
+        <div class="t-count" id="t2-display">4:00</div>
+        <div class="t-btns">
+          <button class="btn btn-sm" id="t2-btn" onclick="toggleTimer(2)">開始</button>
+          <button class="btn btn-sm" onclick="resetTimer(2)">重置</button>
+        </div>
+      </div>
+    </div>
+    <div class="card card-q" id="question-card">
+      <div class="placeholder">請選擇題號或隨機抽題</div>
+    </div>
+    <div id="answer-sections" style="display:none">
+      <div class="card card-intro">
+        <div class="badge badge-gray">① 自我介紹</div>
+        <div class="body-text" id="intro-text"></div>
+      </div>
+      <div class="card card-topic">
+        <div class="badge badge-blue">② 唸題目</div>
+        <div class="body-text" id="topic-text" style="font-weight:500"></div>
+      </div>
+      <div class="card card-ans">
+        <div class="badge badge-green">③ 處理方向摘要</div>
+        <div class="body-text" id="answer-text"></div>
+      </div>
+      <div class="card card-detail" id="detail-card" style="display:none">
+        <div class="badge badge-orange">④ 詳細步驟說明</div>
+        <div id="detail-steps"></div>
+      </div>
+    </div>
+    <div class="action-row" id="action-row" style="display:none">
+      <button class="btn" onclick="toggleAnswer()" id="btn-answer">顯示口試腳本</button>
+      <button class="btn" onclick="toggleDetail()" id="btn-detail" style="display:none">詳細步驟</button>
+      <button class="btn" onclick="nextQuestion()">下一題 →</button>
+    </div>
+  </div>
+
+  <!-- SCRIPT TAB -->
+  <div id="tab-script" style="display:none">
+    <div class="name-row">
+      <label>考生姓名</label>
+      <input type="text" id="name-input2" placeholder="輸入你的名字" value="" oninput="syncName(2)">
+    </div>
+    <div class="card card-intro">
+      <div class="badge badge-gray">① 自我介紹（約30秒）</div>
+      <div class="body-text" id="script-intro-preview"></div>
+    </div>
+    <div class="card card-topic">
+      <div class="badge badge-blue">② 唸題目（約20秒）</div>
+      <div class="body-text" style="color:var(--text-muted)">抽到題目後，清晰地唸出題目全文，讓評審確認題號。</div>
+    </div>
+    <div class="card card-ans">
+      <div class="badge badge-green">③ 表達答案（約3分鐘）</div>
+      <div class="body-text">依照題目性質，分點說明處理步驟：<br><br>
+        • 第一步：確認現況、安撫當事人<br>
+        • 第二步：立即處置（聯繫相關單位）<br>
+        • 第三步：後續跟進（通報旅行社、記錄事件）<br><br>
+        <strong>結語：</strong>「以上是我對此情況的處理方式，謝謝。」
+      </div>
+    </div>
+    <div class="info-block" style="margin-top:0.5rem">
+      <b>口試小提醒</b><br>
+      ・說話速度放慢，吐字清晰<br>
+      ・遇到不確定的細節，強調「我會立即聯繫旅行社」<br>
+      ・結尾一定要說「謝謝」<br>
+      ・保持眼神接觸，展現自信
+    </div>
+  </div>
+
+  <!-- INFO TAB -->
+  <div id="tab-info" style="display:none">
+    <div class="header-card">
+      <div class="badge badge-gray">考試資訊</div>
+      <h2>115年領隊人員職前訓練外語第四期結業測試口試試題</h2>
+      <div class="meta-grid">
+        <div class="meta-item">期間<span>115/09/01 ～ 115/09/10</span></div>
+        <div class="meta-item">地點<span>開南大學</span></div>
+      </div>
+    </div>
+    <div class="info-block"><b>時程</b><br>09:00–09:50 筆試<br>10:00 口試開始</div>
+    <div class="info-block"><b>抽號方式</b><br>1. 主辦方抽第一位考生號碼<br>2. 第一位抽第二位，依序類推<br>3. 落座台前待命區候考</div>
+    <div class="info-block"><b>口試流程（上台4分鐘）</b><br>① 抽考題<br>② 思考 <b>8 分鐘</b>（可用手機查答案）<br>③ 上台後：自我介紹 → 唸題目 → 表達答案</div>
+    <div class="info-block"><b>題庫共 40 題，涵蓋以下類別</b><br>機場/航班・住宿・行程・緊急事故<br>證件・消費・人身安全・天災</div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {id:1,cat:"機場/航班",topic:"團員未到",q:"吳哥窟5日遊，出發當日在機場集合時，有2位團員未到且超過集合時間，電話也聯繫不上，請問領隊應如何處理？如航空公司關櫃，團員仍未到機場，又應如何處理？",a:"立即多方聯繫（手機、緊急聯絡人、旅行社），並請航空公司廣播尋人。超過關櫃時間仍未到，須讓其他團員辦理登機；記錄事件，通報旅行社，在台留下緊急聯繫資訊給未到團員。",steps:["【立即聯繫】撥打團員手機，無人接聽則聯繫其緊急聯絡人，同時通報旅行社。","【廣播尋人】請求航空公司地勤協助廣播，在各入口等候。","【評估時限】距關櫃剩15分鐘仍無消息，帶領其餘團員辦理登機手續，不可延誤全團。","【關櫃後仍未到】記錄完整事件經過，在機場留下旅行社緊急聯繫電話給未到團員，並通知旅行社在台灣端協助處理。","【結語】以上是我對本次緊急狀況的處理方式，謝謝。"]},
+  {id:2,cat:"機場/航班",topic:"座位需求",q:"釜山5日遊，出發當日在機場櫃台辦理登機證手續時，有兩位團員希望機上座位能安排在走道旁，領隊應如何處理？",a:"主動向航空公司地勤人員反映需求。若有走道座位可調整，優先安排；若無，誠懇致歉並說明已盡力爭取。",steps:["【了解需求】詢問團員偏好走道座位的原因（年長、行動不便等），以便向地勤說明。","【向地勤反映】辦理登機手續時，主動說明兩位團員的需求，請求協助調整座位。","【有位置時】感謝地勤協助，告知團員座位安排結果。","【無位置時】誠懇向團員致歉，說明已盡力，建議可在登機後直接詢問空服員是否有空位可換。","【結語】以上是我對此座位需求的處理方式，謝謝。"]},
+  {id:3,cat:"機場/航班",topic:"備降他機場",q:"峇里島5日，行程結束後，搭機返臺當抵達桃園機場上空時，卻因機場起濃霧而盤旋近30分鐘都無法降落，之後航空公司廣播此航班將轉往高雄小港機場降落，機上團員議論紛紛，領隊該如何處理？",a:"立即安撫團員情緒，說明這是航空安全規定。降落高雄後協助聯繫旅行社安排交通；若需住宿由航空公司安排，協助辦理。",steps:["【機上安撫】廣播後立即起身，冷靜地向團員說明備降是安全考量，請大家安心配合。","【說明後續】告知降落高雄後，航空公司將統一安排接駁或說明後續班機資訊。","【降落後】協助聯繫旅行社，回報目前狀況；協助有交通需求的團員聯繫家人。","【若需過夜】配合航空公司安排住宿及餐食，協助辦理相關手續，費用由航空公司負擔。","【結語】以上是我對備降狀況的處理方式，謝謝。"]},
+  {id:4,cat:"行程",topic:"導遊未到",q:"越南5日，當班機抵達越南時，全團順利出關後，未見導遊前來接機，領隊連絡後得知，導遊途中發生意外，無法按時前來，請問領隊應如何處理？",a:"立即聯繫當地旅行社要求派遣替補導遊；帶領大家至安全等候區，由領隊暫代說明行程。通報台灣旅行社並記錄全過程。",steps:["【確認狀況】聯繫當地代理社，確認導遊意外情形，要求立即派遣替補導遊。","【安撫團員】帶領大家至機場等候區坐定，說明導遊發生意外，旅行社正在處理中，請大家稍候。","【暫代說明】若替補導遊需時較長，由領隊主動說明今日行程安排，確保不影響行程。","【通報旅行社】聯繫台灣旅行社，回報事件始末，由旅行社與代理社協調責任。","【結語】以上是我對導遊未到狀況的處理方式，謝謝。"]},
+  {id:5,cat:"行程",topic:"車輛不足",q:"法國12日，團體一行15人旅遊，因當地國外代理旅行社作業疏失，安排18人座車輛，造成團員幾天旅途不甚舒適，引起抱怨，請問領隊應如何處理？",a:"主動向當地代理社反映，要求儘速更換合適車輛；若無法立即更換，設法讓座位分配更合理舒適。向團員誠意致歉並記錄，回國後協助申訴或爭取補償。",steps:["【即時反映】立即聯繫當地代理社，說明車輛座位數與實際需求不符，要求更換適當車輛。","【臨時應對】若無法立即換車，協助調整座位安排，讓長者或有需要者優先坐較舒適位置，每段行程輪換。","【向團員致歉】誠意說明此為代理社作業疏失，並非旅行社故意，已正式反映要求改善。","【記錄存證】詳細記錄車輛型號、座位數及抱怨事項，保留溝通記錄。","【回國申訴】協助團員向旅行社申請適當補償或致歉說明。","【結語】以上是我對車輛不足問題的處理方式，謝謝。"]},
+  {id:6,cat:"行程",topic:"車廂等級降等",q:"瑞士深度10日，原行程標明搭乘瑞士伯尼那景觀列車頭等艙，搭乘前卻臨時被告知需改搭二等艙（普通艙），請問領隊應如何處理？",a:"立即向代理社了解原因並爭取恢復或補償；向團員說明狀況、誠意致歉；回國後協助申請差價退款。",steps:["【確認原因】立即向當地代理社或車站詢問頭等艙改艙原因，取得書面說明。","【爭取權益】要求代理社恢復頭等艙安排；若確實無法，爭取差價全額退款或其他補償方案。","【告知團員】誠意向團員說明情況，致歉，並承諾回國後將協助申請差價退款。","【記錄存證】拍照留存票根、座位等級差異，以利後續申訴。","【回國跟進】協助向旅行社正式申請頭等艙與二等艙之差價退款。","【結語】以上是我對艙等降等問題的處理方式，謝謝。"]},
+  {id:7,cat:"行程",topic:"遊船已開",q:"泰國5日之第4天，安排傍晚湄南河遊船及船上晚餐，不料當天曼谷市區嚴重塞車，抵達碼頭時遊船已開出，請問領隊該如何處理及安排？",a:"立即聯繫導遊或代理社查詢替代方案；就近安排晚餐；若可安排隔日或其他替代則儘速規劃；記錄以利申訴。",steps:["【確認狀況】抵達碼頭確認遊船已開，立即聯繫導遊及代理社說明情形。","【查詢補救】詢問是否有下一班次或可安排隔日補遊；若行程允許，立即預訂。","【安排晚餐】聯繫附近餐廳，就近安排品質相當的晚餐，不讓團員挨餓。","【安撫說明】向團員說明塞車為不可抗力，並說明已協調的替代方案，表達誠意。","【記錄申訴】詳細記錄塞車原因、抵達時間、遊船班次等，回國後協助申請部分退款。","【結語】以上是我對遊船未趕上狀況的處理方式，謝謝。"]},
+  {id:8,cat:"機場/航班",topic:"攜帶違禁品",q:"澳洲8日，領隊於機場等候客人報到時，有某團員夫妻帶了一大箱的東西，經詢問發現是牛肉乾、中藥、泡麵等，經提醒勸阻仍決定攜帶出國，入境雪梨時被海關攔下，請問領隊應如何處理？",a:"事先已告知並勸阻，領隊已善盡提醒義務。被攔時協助翻譯溝通，配合海關；若被沒收或罰款，由當事人自行負責。",steps:["【事前提醒】出發前或在機場已明確告知澳洲海關嚴禁攜帶動植物食品，並勸阻，此為領隊職責已盡。","【被攔時協助】協助翻譯溝通，向海關說明情況，配合海關人員指示。","【不承擔責任】清楚向團員說明，既已勸阻，罰款、沒收等後果由當事人自行承擔，非旅行社責任。","【協助配合】待海關程序完成後，協助團員儘速通關，不影響整體行程。","【記錄存證】記錄提醒過程及結果，以備旅行社參考。","【結語】以上是我對違禁品入境問題的處理方式，謝謝。"]},
+  {id:9,cat:"住宿",topic:"領隊房間未訂",q:"日本5天行程，某團體為特殊機構參訪團，第2天飯店由客戶自理，但團體抵達飯店至櫃台辦理Check in時，被告知客戶只訂團員的房間，沒有訂司機與領隊的房間，當天也沒有足夠的房間數，領隊該如何處理？",a:"立即聯繫客戶或主辦方要求緊急處理；請飯店協助查詢周邊房間。記錄全過程，費用由主辦方負責。",steps:["【立即聯繫】立刻致電客戶或主辦方說明狀況，確認訂房遺漏屬實，要求立即補救。","【請飯店協助】請飯店前台協助查詢是否有加房可能，或推薦附近可入住之飯店。","【安排司機】司機工作辛苦，優先確保司機有住所休息，領隊次之。","【費用歸屬】明確記錄主辦方疏失，後續住宿費用全數由主辦方承擔，非領隊個人出資。","【記錄存證】保留聯繫記錄及額外費用收據，作為後續請款憑證。","【結語】以上是我對住宿安排疏失的處理方式，謝謝。"]},
+  {id:10,cat:"住宿",topic:"室友糾紛",q:"某單女團員向領隊抱怨，表示同房室友霸佔浴室時間過長，影響她每晚必須很晚才能休息，強烈要求換房或換室友，但是團體人數剛好，也沒有其他單人參團可換，請問領隊應如何處理？",a:"耐心傾聽雙方，協商浴室使用時段；若衝突無法化解，詢問飯店加床或空房選項；保持中立，不偏袒任一方。",steps:["【傾聽抱怨方】耐心聽取投訴團員的困擾，表達理解與重視。","【中立溝通】以私下方式邀請兩位團員共同協商，提出浴室時間分配建議（如一位21:00前、一位21:00後）。","【詢問飯店】若協商破裂，詢問飯店是否有單人房或加床選項；若有費用，由雙方或抱怨方決定是否自費升級。","【說明限制】若真的無法換房，誠意向投訴方說明團體人數限制，請求諒解，承諾繼續協助溝通。","【持續關注】隔天主動詢問狀況是否改善。","【結語】以上是我對室友糾紛的處理方式，謝謝。"]},
+  {id:11,cat:"緊急事故",topic:"飯店火警",q:"加拿大9日之第3天凌晨4點，飯店樓下發生火警，請問領隊應如何處理與保護團員安全？",a:"立即通知所有團員依逃生路線疏散，切勿使用電梯，帶領大家至安全集合點。清點人數；配合消防人員；安排後續住宿與心理安撫。",steps:["【立即疏散】逐一敲門通知所有團員，提醒攜帶護照等重要文件，依疏散路線步行下樓，嚴禁搭乘電梯。","【清點人數】到達戶外集合點後立即清點所有團員，確認無人遺漏。","【配合消防】聽從消防人員指示，不擅自返回房間。","【聯繫旅行社】確認所有人安全後，立即通報旅行社說明狀況。","【後續安排】若無法返回房間，配合飯店或消防安排臨時住所；提供心理安撫，穩定團員情緒。","【記錄事件】詳細記錄疏散時間、人員狀況，供旅行社存檔。","【結語】以上是我對飯店火警的緊急處理方式，謝謝。"]},
+  {id:12,cat:"住宿",topic:"飯店停電",q:"北歐極光12日遊，第1天晚上9點飯店臨時停電長達數小時，既沒暖氣也沒熱水，團員紛紛向領隊反映，請問領隊應如何處理？",a:"立即向飯店反映，要求告知原因及預計恢復時間；協助取得應急物資；若長時間無法恢復，要求替代方案；記錄事件，回國後協助申請補償。",steps:["【立即反映】前往飯店前台，要求說明停電原因及預計恢復時間。","【爭取應急物資】要求飯店提供手電筒、蠟燭、備用毯等；若在北歐冬季，保暖物資尤為重要。","【安撫團員】告知團員飯店正在處理，並已取得應急物資；請大家待在房間或大廳等候。","【若長時間停電】要求飯店協調鄰近旅館換房或提供臨時暖氣設備。","【記錄存證】拍照記錄停電狀況、飯店的回應及應急措施。","【回國申訴】協助向旅行社申請住宿品質不符之補償。","【結語】以上是我對飯店停電問題的處理方式，謝謝。"]},
+  {id:13,cat:"住宿",topic:"團員竊取飯店物品",q:"紐西蘭8日，某團員入住五星級酒店時，將房間內的水晶杯和抱枕偷走，退房30分鐘後飯店人員將此情況告知領隊，請問領隊該如何處理？",a:"立即聯繫當事團員，請其歸還或賠償。協助雙方溝通，說明可能觸法；若拒絕，飯店有權報警或向旅行社追償。記錄並通報旅行社。",steps:["【聯繫當事人】立即致電當事團員，說明飯店已發現物品短少，請其如實說明。","【勸說歸還】私下溝通，說明此行為在紐西蘭可能涉及刑事責任，以及對旅行社信譽的影響，勸說主動歸還或賠償。","【協助溝通】陪同當事人與飯店代表會面，協助翻譯及協調，促成和解。","【若拒絕配合】告知飯店有權報警處理，非領隊能干涉；通報旅行社，由公司層級介入。","【記錄存證】記錄事件經過及飯店索賠金額，供旅行社存檔。","【結語】以上是我對團員竊取飯店物品問題的處理方式，謝謝。"]},
+  {id:14,cat:"住宿",topic:"蜜月套房安排錯誤",q:"日本箱根蜜月團，行程載明夜宿箱根溫泉旅館蜜月套房，但團體抵達旅館時，卻發現房間安排發生問題，部分團員被分配到四人房，團員不悅，領隊該如何處理？",a:"立即與旅館交涉，要求更換或補救；若確無套房，要求升等或補償；向團員誠意致歉，記錄後回國申訴爭取賠償。",steps:["【立即交涉】前往旅館前台，出示行程合約，說明明載蜜月套房，要求立即更換正確房型。","【協商補救】若旅館確無套房，要求升等至最高等級可用房型；同時要求旅館出具說明文件。","【向代理社反映】立即通知當地代理社，要求代為向旅館施壓，並提出補償方案。","【向團員致歉】誠意向受影響團員道歉，說明已盡力交涉，並承諾回國後爭取賠償。","【記錄存證】拍照留存合約、房間狀況，保留旅館說明文件。","【回國申訴】協助向旅行社正式申訴，爭取套房差價或其他形式賠償。","【結語】以上是我對蜜月套房安排錯誤的處理方式，謝謝。"]},
+  {id:15,cat:"行程",topic:"餐廳服務糾紛",q:"團員反應對東歐中餐廳菜色及服務態度欠佳，數次與餐廳服務人員發生口角，並表示旅行社安排不當，請問領隊應如何處理？",a:"立即介入緩和衝突；向餐廳反映服務問題；向團員說明已反映意見；若屢次發生，聯繫代理社更換餐廳；詳細記錄供改善參考。",steps:["【介入緩和】立即介入衝突現場，以和緩語氣請雙方冷靜，避免口角升級影響其他用餐者。","【向餐廳反映】私下與餐廳經理溝通，說明團員反應的服務問題，要求改善態度及菜色品質。","【向團員說明】向全體團員說明已正式反映，餐廳承諾改善，請大家繼續用餐。","【評估更換】若問題持續，立即聯繫當地代理社，要求後續行程更換合作餐廳。","【記錄事件】詳細記錄發生日期、餐廳名稱、問題內容，作為旅行社日後合作評估依據。","【結語】以上是我對餐廳服務糾紛的處理方式，謝謝。"]},
+  {id:16,cat:"機場/航班",topic:"行李遺失",q:"純法10天，團體第1天抵達巴黎時，遇到航空公司地勤人員大罷工，全團於出關領行李時遲遲不見行李出來，行程第5天只拿到部分行李，領隊該如何處理安排？",a:"立即填寫PIR申報，取得編號；協助申請緊急生活費補貼；告知保留收據；持續追蹤行李狀態；通報旅行社。",steps:["【填寫PIR】帶領所有行李遺失的團員至航空公司行李服務台填寫遺失申報表（PIR），取得報告號碼。","【申請緊急補貼】協助各團員向航空公司申請購買生活必需品的緊急補貼金。","【告知保留收據】提醒所有人購買必需品時保留收據，日後向航空公司或保險公司申請理賠。","【持續追蹤】每天聯繫航空公司確認行李狀況，並向團員更新進度，安定人心。","【部分到達時】協助確認行李歸屬，優先通知需要的團員領取，繼續追蹤其餘行李。","【通報旅行社】全程向旅行社回報，由旅行社協助與航空公司交涉。","【結語】以上是我對行李遺失問題的處理方式，謝謝。"]},
+  {id:17,cat:"住宿",topic:"行李被破壞",q:"埃及10日之第2天，某團員向領隊反映行李遭到破壞，要求飯店賠償，監視器查出有3位飯店人員進入此房間，但因無法證明是飯店人員所為，所以拒絕賠償，請問領隊該如何處理？",a:"協助提出書面申訴；取得監視器畫面副本；建議申請保險理賠；通報旅行社追償。",steps:["【拍照留存】立即協助團員拍攝行李破損照片，作為損失憑證。","【正式書面申訴】協助向飯店提交書面申訴，要求飯店提供監視器畫面副本及書面說明。","【爭取調查】以監視器畫面顯示飯店人員進出為由，要求飯店進行內部調查。","【申請旅遊保險】若飯店拒絕賠償，建議向旅遊保險公司申請「財物損失」理賠，並提供所有文件。","【通報旅行社】聯繫旅行社，由公司透過法律途徑或外交部協助向飯店追償。","【記錄完整】記錄損失物品清單、估價及所有溝通記錄。","【結語】以上是我對行李被破壞問題的處理方式，謝謝。"]},
+  {id:18,cat:"機場/航班",topic:"行李超重",q:"某團員因第一次跟團出國，不清楚該團的行程中可攜帶多少公斤重的行李，從而導致在辦登機時被航空公司告知行李超重，請問領隊該如何處理？",a:"協助溝通，詢問其他團員是否有多餘額度可分攤；若仍需繳費，由當事人自付；事後建議旅行社強化行前說明。",steps:["【確認超重】與航空公司確認超重公斤數及費用。","【協調分攤】詢問其他團員是否有多餘免費行李額度可供轉讓（每位分攤部分重量）。","【若仍超重】若無法完全解決，費用由當事人自行繳納，此非旅行社責任。","【說明責任】溫和告知團員，行李規定屬行前說明範圍，本次費用需自行承擔。","【建議改善】回國後向旅行社反映，建議在行前說明書中更清楚標註行李限額規定。","【結語】以上是我對行李超重問題的處理方式，謝謝。"]},
+  {id:19,cat:"天災",topic:"颱風停駛",q:"北越5日之原訂第2天搭乘下龍灣遊船，但因強烈颱風從越南海防登陸，以致下龍灣遊船全部停駛，團員表示遺憾但期待改第3天搭乘遊船，但第3天遊船依舊停駛，請問領隊如何處理安排？",a:"向團員說明颱風為不可抗力；與代理社協商替代景點；若確定無法安排，回國後協助申請退款。",steps:["【說明原因】向團員清楚說明颱風屬不可抗力天災，遊船停駛為安全考量，非旅行社之過失。","【第2天替代安排】與導遊及代理社協商，安排河內市區景點填補行程。","【第3天持續評估】早上確認天氣及遊船恢復狀況；若確定無法出航，繼續安排替代景點。","【向團員說明】每天主動向團員通報最新狀況，說明已盡力爭取補救方案。","【記錄申請退款】記錄遊船原費用，回國後協助向旅行社申請部分退款。","【結語】以上是我對颱風造成行程取消的處理方式，謝謝。"]},
+  {id:20,cat:"天災",topic:"大地震",q:"尼泊爾8日行程中遇到大地震，團體位於災區內且交通與通訊均中斷，領隊應如何緊急應變處理以確保所有團員安全脫困？",a:"立即引導至空曠安全地帶，清點人數，優先處理傷員；嘗試多種方式對外聯繫；等待官方救援，不輕易單獨行動。",steps:["【立即疏散】第一時間帶領所有人離開建築物，前往空曠安全地帶，遠離電線及危險建築。","【清點人員】確認所有團員均安，若有傷員立即施以基本急救，確保不再移動傷者骨折部位。","【對外聯繫】嘗試多管道聯繫：手機（有訊號時）、台灣駐尼代表處、向當地居民借衛星電話。","【維持秩序】冷靜安撫情緒，禁止團員單獨行動，保持集體行動以利救援找到全員。","【等待救援】若交通確實中斷，原地等待官方救援，避免貿然移動造成二次傷害。","【記錄狀況】記錄所有傷亡及位置資訊，便於救援人員掌握情況。","【結語】以上是我對地震緊急應變的處理方式，謝謝。"]},
+  {id:21,cat:"天災",topic:"暴風雪",q:"加拿大12日之第9天，行程中遇到暴風雪造成公路無法通行以及飛機無法順利起降，請問領隊應如何處理？",a:"停止移動，確保團員在安全室內；聯繫旅行社及航空公司掌握最新狀況；協助延住及換票；說明天候為不可抗力，申請不便險。",steps:["【停止行程】立即停止一切移動，帶領團員回到或留在飯店，不冒險行駛。","【聯繫各方】分別聯繫旅行社、航空公司，了解最新道路及航班狀況。","【辦理延住】協助辦理飯店延住手續；費用由旅行社或航空公司承擔。","【安撫團員】定時向團員更新最新資訊，說明暴風雪屬不可抗力，努力維持情緒穩定。","【換票安排】配合航空公司辦理航班更改手續，確保優先安排最近班次。","【申請保險】提醒有購買旅遊不便險的團員，延誤費用可申請理賠，保留相關收據。","【結語】以上是我對暴風雪行程中斷的處理方式，謝謝。"]},
+  {id:22,cat:"證件",topic:"護照遺失",q:"泰國5日遊之第5天，抵達曼谷機場，團體準備辦理出境時，有位團員表示遍尋不著他的護照，請問領隊該如何處理？",a:"請團員仔細確認行李；聯繫駐泰代表處辦理臨時通行證；報警取得報案證明；協助安排後續班機。",steps:["【仔細確認】請團員冷靜，仔細清查所有隨身行李、衣物口袋及托運行李。","【聯繫代表處】立即聯繫駐泰國台北經濟文化辦事處，說明護照遺失情形，申辦臨時入國許可。","【報警備案】陪同團員至機場警察局報案，取得報案證明，作為後續申辦文件之用。","【通知旅行社】聯繫台灣旅行社，由旅行社協助聯繫家屬及安排後續班機。","【其他團員先行】請其他團員按原定航班返台，陪同當事人處理後續。","【申辦文件】配合代表處完成臨時通行證申辦程序，協助安排最近返台班機。","【結語】以上是我對護照遺失問題的處理方式，謝謝。"]},
+  {id:23,cat:"證件",topic:"攜帶過期護照",q:"某位自帶證件的團員遲到，匆匆趕來後，發現自己錯帶成過期的護照，焦急萬分，距離登機也僅剩1.5小時，請問領隊該如何處理？",a:"立即聯繫旅行社；請家人送有效護照；評估是否能趕上飛機；若不行，協助換票；費用由當事人承擔。",steps:["【立即評估】確認過期護照情形屬實，同時估算距登機時間是否允許補救。","【聯繫家人】請當事人立即聯繫家人，確認有效護照位置，評估快速送達機場的可能性。","【通知旅行社】立即通報旅行社，由旅行社評估後續處理方案。","【若趕得上】安排家人最快方式送達，領隊在登機門等候，確認護照到達後協助快速辦理。","【若趕不上】協助辦理後補機位，安排最近可搭乘的班機；改票費用均由當事人自行承擔。","【記錄事件】記錄完整事件過程，提醒旅行社日後行前說明加強提醒攜帶有效證件。","【結語】以上是我對攜帶過期護照問題的處理方式，謝謝。"]},
+  {id:24,cat:"證件",topic:"證照交錯",q:"東澳7天團體由香港轉機前往雪梨，團員中某一家六口的兒子，因工作關係預計單獨由高雄出發前往香港機場與團體會合；團體於機場集合時，領隊驚覺因旅行社作業疏失，將團員兒子的證照交至台北，領隊應如何處理？",a:"立即聯繫旅行社要求緊急快遞；請當事人在香港等候；通知航空公司；若確實無法登機，旅行社負責承擔費用。",steps:["【確認狀況】立即聯繫旅行社，確認證照確實在台北，要求旅行社承擔此疏失責任。","【緊急快遞】旅行社安排最快方式將護照送達；評估各快遞選項時效。","【通知當事人】請當事人留在香港機場等候，不要搭乘任何班機，確保人在安全位置。","【通知航空公司】說明特殊情況，請航空公司保留機位，延後確認登機。","【若護照趕到】協助當事人快速辦理登機手續，追趕行程。","【若趕不上】旅行社須負責安排後續班機、住宿及所有額外費用，絕非當事人責任。","【結語】以上是我對證照作業疏失的處理方式，謝謝。"]},
+  {id:25,cat:"消費",topic:"借款需求",q:"美西8日之第3天，某團員於晚上在拉斯維加斯賭場賭光所帶旅費，隔天自由活動逛街購物時，表示想買商品但信用卡額度不足，想向領隊借支2,000美元並承諾返國後立馬歸還，請問領隊應如何處理？",a:"婉拒借款，說明非領隊職責；協助聯繫家人匯款或使用Western Union；協助信用卡緊急額度查詢；保持關心但守住界線。",steps:["【婉拒借款】以溫和但堅定的語氣婉拒，說明領隊不得代墊個人費用，此非職責範圍。","【建議國際匯款】協助聯繫家人或朋友，透過銀行電匯或Western Union等快速匯款服務取得資金。","【信用卡查詢】建議聯繫信用卡公司申請緊急臨時額度，或預借現金服務。","【緊急聯繫人】若以上均無法解決，請台灣旅行社協助聯繫當事人緊急聯絡人尋求支援。","【關心後續】確認其仍有足夠資金維持基本飲食和交通，確保人身安全不受影響。","【結語】以上是我對借款需求的處理方式，謝謝。"]},
+  {id:26,cat:"行程",topic:"礦泉水收費",q:"泰國7日，因天氣炎熱，團員紛紛要求多拿2瓶礦泉水，導遊卻表示需要收費，引起團員不滿，領隊該如何處理？",a:"確認合約內容；若合約有載明，要求提供；若屬額外，向團員說明並提供自行購買建議；避免與導遊正面衝突。",steps:["【確認合約】查閱行程合約，確認礦泉水供應條件（每日幾瓶、是否有限制）。","【若合約有載明】以合約為依據，要求導遊依約提供，不應額外收費。","【若屬額外供應】向團員說明合約內容，超出部分需自費，並告知附近便利商店可自行購買。","【協商折衷】可建議代理社或導遊以優惠價格提供，讓團員選擇是否購買。","【避免衝突】不在團員面前與導遊正面爭執，以私下溝通方式處理，維護雙方關係。","【結語】以上是我對礦泉水收費問題的處理方式，謝謝。"]},
+  {id:27,cat:"行程",topic:"司機要求加班費",q:"奧捷豐富10日之第4天，行程晚上到餐廳用餐，用完餐後卻等不到遊覽車，連絡司機卻說已超過上班時數，需要加班費否則拒絕開車，請問領隊該如何處理？",a:"立即聯繫代理社說明狀況；由旅行社層級決定是否支付；若司機拒絕，要求代理社另派車輛；確保團員安全等待。",steps:["【立即聯繫代理社】立即致電當地代理社，說明司機要求加班費的狀況，要求代理社介入協調。","【確認責任歸屬】行程延誤若因代理社安排不當導致超時，加班費應由代理社承擔，非領隊個人出資。","【安頓團員】帶領團員回到餐廳內安全等候，說明正在協調中，請大家耐心等待。","【若代理社同意付費】由代理社直接與司機溝通，確認付款後出發。","【若僵持不下】要求代理社立即安排替代車輛，不可讓團員長期滯留路邊。","【記錄事件】詳細記錄發生時間、溝通過程，回國後由旅行社向代理社正式求償。","【結語】以上是我對司機要求加班費問題的處理方式，謝謝。"]},
+  {id:28,cat:"行程",topic:"集合遲到",q:"克羅埃西亞10日遊，有4位團員一同出遊，行程前3天早上集合時屢次遲到，且都以沒有聽到morning call（來電叫醒服務）為藉口，結果造成團體集合時間的延誤，引起其他團員的不滿，請問領隊應如何處理？",a:"私下與遲到團員溝通；在晚上說明中向全體強調集合時間重要性；若仍重複，可在全團面前溫和說明規範；記錄在行程日誌。",steps:["【第一次發生】私下、溫和地與4位團員溝通，說明遲到對全團的影響，請其設定多個鬧鐘，不依賴morning call。","【晚上行程說明】在晚間行程說明時，向全體強調隔日集合時間，並提醒自行設鬧鐘（不點名批評）。","【第二次發生】再次私下溝通，語氣更明確，告知若持續遲到可能影響同行團員權益。","【若仍發生】在全體面前溫和但清楚地宣布：集合時間若超過5分鐘，遊覽車將先行出發，責任由遲到者自負。","【其他團員安撫】感謝其他團員的配合與耐心，說明領隊已積極處理此問題。","【記錄】在行程日誌中記錄遲到次數及處理過程，供旅行社參考。","【結語】以上是我對屢次遲到問題的處理方式，謝謝。"]},
+  {id:29,cat:"消費",topic:"購物價差投訴",q:"馬來西亞6日，某團員在錫器店購買一只精美的錫製茶葉罐。最後1天在機場免稅店看到同型製品且價差便宜一半，認為導遊安排到昂貴的黑店，而領隊沒有及時阻止購買（或暗示不要購買），聲稱返國後將要投訴，請問領隊應如何處理？",a:"耐心說明觀光區與免稅店定價不同屬正常現象，領隊並未從中獲利；告知申訴管道；回國後通報旅行社留有記錄。",steps:["【傾聽說明】耐心傾聽團員抱怨，不急於辯解，表示理解其失落感。","【說明價差原因】解釋觀光景點購物與機場免稅店定價不同，是國際間普遍現象，並非「黑店」；領隊未強制購買亦無從中獲利。","【說明購物自主性】強調購物為個人決定，行程中並無強制購物安排。","【若仍堅持投訴】告知可回國後向旅遊申訴機構申訴，領隊尊重其權利。","【主動通報旅行社】回國後主動向旅行社說明事件始末，留有記錄以備查。","【結語】以上是我對購物價差投訴的處理方式，謝謝。"]},
+  {id:30,cat:"行程",topic:"自費行程更改",q:"泰國5日，團員要求當地導遊取消行程中建議之自費行程，想要改自費參加其他活動，請問領隊該如何處理？",a:"確認自費行程付款狀況；尊重個人意願；說明違約金責任；確保安全；請團員填寫自行活動聲明書。",steps:["【確認付款狀況】詢問導遊該自費行程是否已預訂付款；若已付，說明可能有違約金。","【違約金說明】若有取消費用，由當事人自行承擔，旅行社不負責。","【尊重意願】若未付款或團員接受違約金，尊重其更改自費活動的決定。","【安全確認】了解團員想改參加的活動是否安全，必要時提供安全建議。","【填寫聲明書】請團員簽署自行活動聲明書，載明時間、目的地、緊急聯繫方式。","【約定集合】確認後續集合時間及地點，確保行程不受影響。","【結語】以上是我對自費行程更改的處理方式，謝謝。"]},
+  {id:31,cat:"緊急事故",topic:"旅行社捲款",q:"越南6日之第3天，下午當地旅行社得知台灣旅行社負責人捲款逃跑，表示尚未收到款項，並要求每位團員應繳交團費後才能繼續行程，請問領隊該如何處理？",a:"冷靜應對，拒絕代收費用；聯繫台灣旅行社確認；通知外交部及駐越代表處；安撫團員確保安全優先。",steps:["【冷靜應對】不驚慌，以穩定語氣安撫團員，說明正在了解與處理中。","【拒絕代收費用】明確拒絕代收任何款項，說明此非領隊職責，且在法律上有爭議。","【聯繫台灣旅行社】立即致電台灣旅行社緊急聯絡人，確認實際狀況及公司目前應對措施。","【通知代表處】聯繫駐越南台北經濟文化辦事處，告知台灣公民在海外遇到此緊急狀況。","【通知外交部】撥打外交部旅外急難救助專線（+886-800-085-095），請求協助。","【確保人身安全】安撫團員，強調人身安全優先，必要時協助安排住宿，由相關單位協調解決財務問題。","【結語】以上是我對旅行社捲款緊急狀況的處理方式，謝謝。"]},
+  {id:32,cat:"行程",topic:"表演票更換",q:"法瑞12日，原先行程表上記載特別安排團員看巴黎紅磨坊秀，但因Local作業疏失，導致當天現場購票，又因門票已售罄，改取得麗都秀門票，請問領隊應如何處理才不會引起團員的抱怨？",a:"入場前正向介紹麗都秀；聯繫代理社要求說明並記錄；若有價差爭取退款；回國後協助申訴。",steps:["【提前告知】在前往表演前，主動告知團員行程有所調整，表達歉意並說明原因。","【正向介紹麗都秀】介紹麗都秀同樣是巴黎百年歷史頂級表演，有其獨特精彩之處，引發期待感。","【聯繫代理社】正式要求代理社提供書面說明，確認是否為作業疏失，並要求處理方案。","【爭取價差補償】若紅磨坊與麗都票價有差異，要求代理社退還差價或提供其他補償。","【回國申訴】協助團員向旅行社提出申訴，申請退款或補償。","【記錄存證】保留原行程表及更換後的票根，作為申訴佐證。","【結語】以上是我對表演票更換問題的處理方式，謝謝。"]},
+  {id:33,cat:"人身安全",topic:"當地示威衝突",q:"團體旅遊10日之第5天，遇到當地示威並發生激烈衝突，造成數十人死亡及上百人受傷，為維護團員的生命安全，請問領隊該如何處理？",a:"立即帶領團員遠離衝突現場，進入安全建築；清點人數；聯繫駐外代表處及旅行社；等待安全後再行動。",steps:["【立即撤離】第一時間帶領所有團員快速離開衝突區域，就近進入飯店、商場等堅固建築物避難，鎖門關窗。","【清點人數】進入安全場所後立即清點所有團員，確認無人失散。","【聯繫代表處】立即聯繫當地台灣駐外代表處，告知台灣公民所在位置及狀況，尋求協助指引。","【聯繫旅行社】通報旅行社，說明目前位置及狀況，由旅行社通知家屬並協調後續。","【持續掌握資訊】關注當地官方媒體及新聞，了解衝突範圍及安全撤離路線。","【等待指示】待局勢穩定或接獲官方撤離指示後，再行動；不單獨外出，保持集體行動。","【結語】以上是我對遇到示威衝突的緊急處理方式，謝謝。"]},
+  {id:34,cat:"緊急事故",topic:"車禍傷亡",q:"北海道5日之第4天，遊覽車在前往小樽運河的途中，一輛小客車突然變換車道，司機因閃避導致車子失去重心而翻覆，造成3位團員傷重不治、其餘團員輕重傷，領隊自身無礙，請問領隊該如何處理後續問題？",a:"立即撥打急救電話，確保傷員獲救治；清點人數；聯繫駐日代表處、旅行社及各家屬；配合警方調查；協助後續保險及往生者事宜。",steps:["【立即急救】撥打日本急救電話（119），告知位置及傷亡概況；在救援到來前進行基本傷口處置。","【清點人員】清點所有人員，確認傷亡狀況，讓輕傷者協助照顧重傷者。","【聯繫代表處】立即聯繫駐日台北經濟文化辦事處，回報事故並請求協助。","【通知旅行社】聯繫旅行社，告知完整事故情形，由旅行社通知各傷亡團員家屬。","【配合警方】如實配合日本警方事故調查，保留現場照片及相關證據。","【協助往生者】與駐日代表處及家屬協調遺體後送台灣之相關程序，聯繫旅遊保險公司啟動理賠。","【結語】以上是我對車禍事故後續處理的方式，謝謝。"]},
+  {id:35,cat:"緊急事故",topic:"團員身體不適",q:"富士山登山健行5日，第2天安排富士山登山活動，某團員於登山過程中痛風發作無法繼續前進，領隊該如何處理？",a:"立即停止讓該團員繼續攀登，安排休息；若嚴重聯繫救護；通知家屬；安排人陪送就醫；其餘團員由導遊帶領繼續。",steps:["【立即停止】請該團員原地休息，不可繼續攀登，避免病情加重。","【評估嚴重程度】詢問症狀嚴重程度，若疼痛劇烈無法行走，聯繫富士山救護站或山岳救援隊。","【安排下山】若尚可行走，安排導遊或其他人員陪同慢慢下山至山下，等候就醫安排。","【聯繫就醫】在山下安排就近就醫，協助翻譯溝通，並通知家屬。","【繼續行程】其餘團員由導遊帶領繼續原定行程，確保雙方均安全。","【保險理賠】協助啟動旅遊保險醫療理賠程序，保留所有就醫收據。","【結語】以上是我對團員痛風發作的處理方式，謝謝。"]},
+  {id:36,cat:"人身安全",topic:"搶劫",q:"巴黎10日，某團員在飯店大廳遇上搶劫，皮夾、證件、現金跟護照全部都被搶走，且當天就要返臺，請問領隊該如何處理？",a:"立即報警取得報案號碼；前往駐法代表處辦理臨時通行證；聯繫旅行社換票；協助申報旅遊保險；全程陪同確保順利返台。",steps:["【立即報警】陪同至最近警察局報案，取得報案證明，並要求英文版或附翻譯。","【聯繫代表處】立即聯繫駐法國台灣代表處，說明護照遺失及當天需返台，申辦緊急入國許可文件。","【通知旅行社】聯繫旅行社，說明情況並請協助換票，確保不誤機。","【協助換票】持臨時入國許可文件至航空公司辦理登機手續，說明護照遺失情形。","【申報保險】協助向旅遊保險公司申報財物損失理賠，保留警察報案證明。","【全程陪同】當天全程陪同該團員，確保其能順利辦理相關手續並登機返台。","【結語】以上是我對搶劫緊急事件的處理方式，謝謝。"]},
+  {id:37,cat:"人身安全",topic:"包包失竊",q:"行程餐廳為西式自助早餐型態，一對夫妻因為想要教導小孩如何取餐而同時離開座位，並將隨身包包放在座位上，回來時發現包包不見了，裡面有美金現金8,000及太太10天行程的氣喘藥，夫妻互相指責，領隊該如何處理？",a:"先安撫雙方情緒，阻止互相指責；向餐廳查看監視器；報警；協助申報保險；關於氣喘藥立即聯繫醫療協助確認替代藥品。",steps:["【安撫情緒】立即介入，請雙方冷靜，說明互相指責無助解決問題，目前最重要的是儘快報案。","【通知餐廳】向餐廳經理反映，請求調取監視器畫面，協助確認失竊時間及可疑人員。","【立即報警】陪同至警察局報案，取得報案證明，作為保險理賠依據。","【處理氣喘藥】立即聯繫旅遊保險醫療諮詢，確認當地藥局是否可購買到同成分藥物（需確認藥物學名）。","【協助保險理賠】協助申報旅遊保險財物損失理賠，現金理賠上限依保單條款而定。","【後續關心】持續關心太太的用藥狀況，確保行程期間身體健康。","【結語】以上是我對包包失竊緊急事件的處理方式，謝謝。"]},
+  {id:38,cat:"緊急事故",topic:"團員失聯",q:"美西8日遊之第3天，早上集合發現某團員未上車，同房團員告知該團員回飯店後，自行搭車前往賭場且徹夜未歸，因當地並沒有Local導遊，請問領隊該如何處理？",a:"多方聯繫當事人；若聯繫不上通報警方；聯繫旅行社；帶其他團員繼續行程同時協助尋人；確認安全後記錄告誡。",steps:["【立即聯繫】持續撥打當事人手機，發送訊息，請同房室友確認最後看到的時間及目的地。","【通知警方】若聯繫超過30分鐘仍無回應，立即通報當地警察局報案備案。","【通知旅行社】聯繫旅行社，告知失聯情形，由旅行社通知家屬並啟動緊急應變程序。","【告知飯店】通知飯店，請飯店留意是否有該團員返回，並保留其房間。","【繼續行程】帶領其他團員繼續當日行程，不讓其他人的行程受到過大影響。","【若確認安全】當事人返回後，私下嚴正告知此行為的嚴重性，並填寫自行活動聲明書，記錄事件。","【結語】以上是我對團員失聯問題的處理方式，謝謝。"]},
+  {id:39,cat:"緊急事故",topic:"意外受傷",q:"北海道5日之第3天，安排滑雪場體驗雪盆，某甲團員因高速衝下失控撞上了同團的某乙團員，造成某乙團員小腿骨折，請問領隊該如何處理？",a:"立即呼叫滑雪場救護人員；確保傷者不移動；聯繫旅行社及家屬；請雙方記錄事件；不表態責任認定；安排就醫及行程調整。",steps:["【立即求援】大聲呼救，立即通知滑雪場救護人員前來，由專業人員處置傷者，切勿自行搬動以免加重傷勢。","【確保現場安全】請其他人員避開，保護傷者免受進一步傷害。","【聯繫保險及旅行社】聯繫旅遊保險醫療緊急救援專線，啟動醫療協助；通報旅行社，由旅行社通知傷者家屬。","【不表態責任】領隊不對責任歸屬做任何判斷或表態，讓雙方各自記錄事件經過，交由保險公司及法律程序處理。","【協助就醫】陪同或安排人員陪同傷者就醫，協助翻譯，保留所有醫療收據。","【行程調整】若傷者無法繼續行程，協助安排留守及後續返台事宜；其餘團員繼續原定行程。","【結語】以上是我對雪盆意外受傷的處理方式，謝謝。"]},
+  {id:40,cat:"人身安全",topic:"按摩不當投訴",q:"泰國6日，行程第5天安排2小時體驗按摩，某女團員指定要力氣較大的男按摩師，1小時後女團員指控男按摩師故意在特殊部位加強力道造成她的心理不舒服，要求提告且賠償全部團費，領隊該如何處理？",a:"立即停止按摩，帶離現場；同理心傾聽；向按摩店正式反映；協助聯繫警方；記錄並通報旅行社。",steps:["【立即停止】請該女士結束按摩服務，帶至安靜私密處，讓她平靜下來。","【表達關心】以同理心傾聽，讓她感受到被重視，不要輕描淡寫或質疑其感受。","【向按摩店反映】陪同正式向按摩店負責人反映，要求店方出面處理，並取得按摩師資料。","【若堅持提告】說明提告流程及所需證據，陪同至警察局報案，取得報案號碼；聯繫旅行社尋求法律協助。","【賠償問題】賠償全部團費屬旅行社層級決定，非領隊權限；告知可向旅行社及旅遊申訴機構提出申請。","【記錄存證】詳細記錄事件時間、地點、按摩師資料、當事人陳述，通報旅行社。","【結語】以上是我對按摩不當投訴的處理方式，謝謝。"]}
+];
+
+let filteredQ=[...questions],currentQ=null,practiced=new Set(),answerVisible=false,detailVisible=false;
+let t1Sec=480,t2Sec=240,t1Iv=null,t2Iv=null;
+
+function getName(){return document.getElementById('name-input').value.trim()||'考生';}
+function getIntro(name){return `各位評審老師好，我叫做${name}，很高興有這個機會參加本次的口試。以下我將就抽到的題目，說明我身為領隊的處理方式，請多指教。`;}
+function renderIntro(){
+  const t=getIntro(getName());
+  ['intro-text','script-intro-preview'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});
+}
+function buildSelect(){
+  const sel=document.getElementById('question-select');
+  sel.innerHTML='<option value="">選擇題號…</option>';
+  filteredQ.forEach(q=>{const o=document.createElement('option');o.value=q.id;o.textContent=`${q.id}. ${q.cat}－${q.topic}`;sel.appendChild(o);});
+}
+function filterCat(){const c=document.getElementById('cat-select').value;filteredQ=c?questions.filter(q=>q.cat===c):[...questions];buildSelect();}
+function showQuestion(q){
+  currentQ=q;answerVisible=false;detailVisible=false;practiced.add(q.id);updateStats();
+  document.getElementById('question-card').innerHTML=`<div class="badge badge-gray">題號 ${q.id}｜${q.cat}－${q.topic}</div><div class="q-text">${q.q}</div>`;
+  document.getElementById('answer-sections').style.display='none';
+  document.getElementById('detail-card').style.display='none';
+  document.getElementById('btn-answer').textContent='顯示口試腳本';
+  document.getElementById('btn-detail').style.display='none';
+  document.getElementById('action-row').style.display='flex';
+  resetTimer(1);resetTimer(2);
+}
+function updateStats(){const d=practiced.size;document.getElementById('stat-done').textContent=d;document.getElementById('stat-remain').textContent=40-d;document.getElementById('progress-fill').style.width=Math.round(d/40*100)+'%';}
+function onSelectChange(){const v=document.getElementById('question-select').value;if(!v)return;const q=questions.find(x=>x.id==v);if(q)showQuestion(q);}
+function drawRandom(){const pool=filteredQ.filter(q=>!practiced.has(q.id));const src=pool.length>0?pool:filteredQ;const q=src[Math.floor(Math.random()*src.length)];document.getElementById('question-select').value=q.id;showQuestion(q);}
+function toggleAnswer(){
+  if(!currentQ)return;answerVisible=!answerVisible;
+  const sec=document.getElementById('answer-sections'),btn=document.getElementById('btn-answer');
+  if(answerVisible){sec.style.display='block';document.getElementById('intro-text').textContent=getIntro(getName());document.getElementById('topic-text').textContent=currentQ.q;document.getElementById('answer-text').textContent=currentQ.a;btn.textContent='隱藏腳本';document.getElementById('btn-detail').style.display='block';}
+  else{sec.style.display='none';btn.textContent='顯示口試腳本';document.getElementById('btn-detail').style.display='none';document.getElementById('detail-card').style.display='none';detailVisible=false;}
+}
+function toggleDetail(){
+  if(!currentQ)return;detailVisible=!detailVisible;
+  const card=document.getElementById('detail-card'),btn=document.getElementById('btn-detail');
+  if(detailVisible){card.style.display='block';document.getElementById('detail-steps').innerHTML=currentQ.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div>${s}</div></div>`).join('');btn.textContent='收起步驟';}
+  else{card.style.display='none';btn.textContent='詳細步驟';}
+}
+function nextQuestion(){if(!currentQ){drawRandom();return;}const idx=filteredQ.findIndex(q=>q.id===currentQ.id);const next=filteredQ[(idx+1)%filteredQ.length];document.getElementById('question-select').value=next.id;showQuestion(next);}
+function updateTimerDisplay(n){const s=n===1?t1Sec:t2Sec,m=Math.floor(s/60),r=s%60,el=document.getElementById(`t${n}-display`);el.textContent=`${m}:${r.toString().padStart(2,'0')}`;el.className='t-count'+(s<=30?' danger':s<=60?' warn':'');}
+function toggleTimer(n){
+  const iv=n===1?t1Iv:t2Iv;
+  if(iv){clearInterval(iv);if(n===1)t1Iv=null;else t2Iv=null;document.getElementById(`t${n}-btn`).textContent='繼續';}
+  else{document.getElementById(`t${n}-btn`).textContent='暫停';const i=setInterval(()=>{if(n===1){if(t1Sec<=0){clearInterval(t1Iv);t1Iv=null;document.getElementById('t1-btn').textContent='開始';return;}t1Sec--;}else{if(t2Sec<=0){clearInterval(t2Iv);t2Iv=null;document.getElementById('t2-btn').textContent='開始';return;}t2Sec--;}updateTimerDisplay(n);},1000);if(n===1)t1Iv=i;else t2Iv=i;}
+}
+function resetTimer(n){if(n===1){clearInterval(t1Iv);t1Iv=null;t1Sec=480;document.getElementById('t1-btn').textContent='開始';}else{clearInterval(t2Iv);t2Iv=null;t2Sec=240;document.getElementById('t2-btn').textContent='開始';}updateTimerDisplay(n);}
+function syncName(from){const v=document.getElementById(from===2?'name-input2':'name-input').value;document.getElementById('name-input').value=v;document.getElementById('name-input2').value=v;renderIntro();}
+function switchTab(tab){['practice','script','info'].forEach(t=>document.getElementById(`tab-${t}`).style.display=t===tab?'':'none');document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['practice','script','info'][i]===tab));if(tab==='script')renderIntro();}
+
+buildSelect();updateTimerDisplay(1);updateTimerDisplay(2);renderIntro();
+</script>
+</body>
+</html>
+HTMLEOF
+echo "完成"
