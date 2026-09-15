@@ -2051,6 +2051,35 @@ loadState();
 
 // ==================== SPECIAL EVENT MODE ====================
 
+function buildEventHourlyHTML(members, plans){
+  const timed = members.filter(m => Number.isFinite(m.start) && Number.isFinite(m.end));
+  if(timed.length===0) return '';
+  let min=24, max=0;
+  timed.forEach(m=>{ min=Math.min(min,m.start); max=Math.max(max,m.end); });
+  if(min>=max) return '';
+  const planCodes = plans.map(p=>p.code);
+  const counts = [];
+  for(let h=min; h<max; h++){
+    const present = timed.filter(m=>m.start<=h && m.end>h);
+    const byPlan = {};
+    planCodes.forEach(code=>{ byPlan[code] = present.filter(m=>m.planCode===code).length; });
+    const unclassified = present.filter(m=> !m.planCode || !planCodes.includes(m.planCode)).length;
+    counts.push({ h, total: present.length, byPlan, unclassified });
+  }
+  const maxC = Math.max(...counts.map(x=>x.total), 1);
+  return `<div class="section-title">每小時在場人數（含方案）</div>` + counts.map(x=>{
+    const planChips = planCodes.filter(code=>x.byPlan[code]>0)
+      .map(code=>`<span class="wd-label">${escapeHtml(code)} ${x.byPlan[code]}人</span>`).join(' ');
+    const unclassChip = x.unclassified>0 ? `<span class="wd-label">未分類 ${x.unclassified}人</span>` : '';
+    return `
+      <div class="hourly-row">
+        <div class="hourly-top"><span>${x.h}:00 – ${x.h+1}:00</span><span><b>${x.total}</b> 人</span></div>
+        <div class="hourly-bar-bg"><div class="hourly-bar-fg" style="width:${(x.total/maxC*100).toFixed(0)}%"></div></div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">${planChips}${unclassChip}</div>
+      </div>`;
+  }).join('');
+}
+
 function buildEventPlanStatsHTML(){
   if(state.eventMembers.length===0) return '';
   const counts = {};
@@ -2222,7 +2251,7 @@ function renderEventPanel(){
   }
 
   document.getElementById('eventSummaryCard').innerHTML = buildEventPlanStatsHTML() + buildSummaryHTML(state.eventMembers, '活動小結');
-  document.getElementById('eventHourlyCard').innerHTML = buildHourlyHTML(state.eventMembers);
+  document.getElementById('eventHourlyCard').innerHTML = buildEventHourlyHTML(state.eventMembers, state.eventPlans);
 }
 
 function cycleEventPay(id){
