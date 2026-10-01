@@ -435,6 +435,7 @@
   .method-chip.linepay{background:var(--blue-soft);color:var(--blue);}
   .method-chip.waived{background:var(--gold-soft);color:#7A5E17;}
   .method-chip.unpaid{background:var(--red-soft);color:var(--red);}
+  .method-chip.pending-change{background:var(--gold-soft);color:#7A5E17;}
 
   .field-label{font-size:13px;color:var(--muted);margin:16px 16px 8px;}
   .add-member{padding:0 16px;}
@@ -581,6 +582,46 @@
     max-width:120px;
   }
   .mc-flag{font-size:12px;color:var(--red);margin-top:8px;}
+
+  .mc-cash-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+    flex-wrap:wrap;
+  }
+  .mc-cash-row .cash-label{font-size:13px;color:var(--muted);white-space:nowrap;}
+  .mc-cash-row .cash-input{
+    width:80px;
+    text-align:center;
+    border:1px solid var(--gold);
+    border-radius:8px;
+    padding:8px 4px;
+    font-size:14px;
+    font-weight:700;
+    font-family:inherit;
+  }
+  .mc-cash-row .cash-change{
+    font-size:14px;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:10px;
+  }
+  .mc-cash-row .cash-change.ok{background:var(--green-soft);color:var(--green);}
+  .mc-cash-row .cash-change.warn{background:var(--red-soft);color:var(--red);}
+  .change-toggle{
+    border:none;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .change-toggle.pending{background:var(--gold-soft);color:#7A5E17;}
+  .change-toggle.done{background:var(--green-soft);color:var(--green);}
 
   .summary-card{
     background:var(--ink);
@@ -1357,8 +1398,32 @@ function renderMembers(){
         ${!m.manualPrice && base!==null ? `<span class="mc-extra ${m.extraHour?'on':''}" onclick="toggleExtraHour('${m.id}')">${m.extraHour?'✓ ':''}加報一小時（+$${addOn}）</span>` : ''}
       </div>
       ${flag}
+      ${method==='cash' ? buildCashChangeRowHTML(m, 'updateCashReceived', 'toggleChangeGiven') : ''}
     </div>`;
   }).join('');
+}
+
+function buildCashChangeRowHTML(m, updateFnName, toggleFnName){
+  const price = Number(m.price)||0;
+  const received = (m.cashReceived!==undefined && m.cashReceived!==null && m.cashReceived!=='') ? Number(m.cashReceived) : null;
+  let changeHtml = '';
+  if(received!==null){
+    const change = received - price;
+    if(change > 0){
+      changeHtml = `<span class="cash-change ok">找零 $${change}</span>
+        <button class="change-toggle ${m.changeGiven?'done':'pending'}" onclick="${toggleFnName}('${m.id}')">${m.changeGiven?'✓ 已找零':'⚠ 尚未找零'}</button>`;
+    } else if(change === 0){
+      changeHtml = `<span class="cash-change ok">剛好，不用找零</span>`;
+    } else {
+      changeHtml = `<span class="cash-change warn">還差 $${-change}</span>`;
+    }
+  }
+  return `
+    <div class="mc-cash-row">
+      <span class="cash-label">實收</span>
+      <input type="number" min="0" class="cash-input" placeholder="${price}" value="${received!==null?received:''}" onchange="${updateFnName}('${m.id}',this.value)">
+      ${changeHtml}
+    </div>`;
 }
 
 function escapeHtml(s){
@@ -1450,6 +1515,12 @@ function renderSummary(){
   if(linepayMembers.length>0) chips += `<span class="method-chip linepay">Line Pay ${linepayMembers.length} 人</span>`;
   if(waivedMembers.length>0) chips += `<span class="method-chip waived">不用收 ${waivedMembers.length} 人</span>`;
   if(unpaidMembers.length>0) chips += `<span class="method-chip unpaid">未付 ${unpaidMembers.length} 人</span>`;
+  const pendingChangeCount = cashMembers.filter(m=>{
+    const price = Number(m.price)||0;
+    const received = (m.cashReceived!==undefined && m.cashReceived!==null && m.cashReceived!=='') ? Number(m.cashReceived) : null;
+    return received!==null && (received-price)>0 && !m.changeGiven;
+  }).length;
+  if(pendingChangeCount>0) chips += `<span class="method-chip pending-change">⚠ 尚未找零 ${pendingChangeCount} 人</span>`;
   chipEl.innerHTML = chips;
 
   el.innerHTML = buildSummaryHTML(state.members, '本場小結');
@@ -1596,6 +1667,23 @@ function addManualMember(){
 
 function deleteMember(id){
   state.members = state.members.filter(m=>m.id!==id);
+  scheduleSave();
+  render();
+}
+
+function updateCashReceived(id, value){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  const v = Number(value);
+  m.cashReceived = (value!=='' && Number.isFinite(v)) ? v : null;
+  m.changeGiven = false;
+  scheduleSave();
+  render();
+}
+function toggleChangeGiven(id){
+  const m = state.members.find(m=>m.id===id);
+  if(!m) return;
+  m.changeGiven = !m.changeGiven;
   scheduleSave();
   render();
 }
@@ -2246,6 +2334,7 @@ function renderEventPanel(){
           <button class="mc-del" onclick="deleteEventMember('${m.id}')">✕</button>
         </div>
         ${!priceKnown ? `<div class="mc-time"><input type="number" min="0" placeholder="手動金額" style="width:100px" onchange="updateEventMemberPrice('${m.id}',this.value)"></div>` : ''}
+        ${method==='cash' ? buildCashChangeRowHTML(m, 'updateEventCashReceived', 'toggleEventChangeGiven') : ''}
       </div>`;
     }).join('');
   }
@@ -2273,6 +2362,22 @@ function updateEventMemberPrice(id, value){
   if(!m) return;
   const v = Number(value);
   m.price = Number.isFinite(v) && v>=0 ? v : null;
+  scheduleSave();
+  render();
+}
+function updateEventCashReceived(id, value){
+  const m = state.eventMembers.find(m=>m.id===id);
+  if(!m) return;
+  const v = Number(value);
+  m.cashReceived = (value!=='' && Number.isFinite(v)) ? v : null;
+  m.changeGiven = false;
+  scheduleSave();
+  render();
+}
+function toggleEventChangeGiven(id){
+  const m = state.eventMembers.find(m=>m.id===id);
+  if(!m) return;
+  m.changeGiven = !m.changeGiven;
   scheduleSave();
   render();
 }
